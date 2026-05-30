@@ -18,16 +18,17 @@ function createOverlay() {
   document.body.appendChild(div)
 }
 
-function updateOverlay(text) {
+function updateOverlay(english, chinese) {
   const overlay = document.getElementById('duocue-overlay')
   if (!overlay) return
-  if (text) {
-    overlay.textContent = text
-    overlay.style.display = 'block'
-  } else {
-    overlay.textContent = ''
+  if (!english) {
+    overlay.innerHTML = ''
     overlay.style.display = 'none'
+    return
   }
+  const chineseHtml = chinese ? `<div class="duocue-zh">${chinese}</div>` : ''
+  overlay.innerHTML = `<div class="duocue-en">${english}</div>${chineseHtml}`
+  overlay.style.display = 'block'
 }
 
 function extractText(platform) {
