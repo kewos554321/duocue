@@ -29,3 +29,45 @@ function updateOverlay(text) {
     overlay.style.display = 'none'
   }
 }
+
+function extractText(platform) {
+  const nodes = document.querySelectorAll(platform.textSelector)
+  return Array.from(nodes)
+    .map(n => n.textContent.trim())
+    .filter(Boolean)
+    .join('\n')
+}
+
+function startObserver(platform) {
+  const container = document.querySelector(platform.containerSelector)
+  if (!container) return
+
+  createOverlay()
+
+  const observer = new MutationObserver(() => {
+    const text = extractText(platform)
+    console.log(`[DuoCue] ${text || '(no subtitle)'}`)
+    updateOverlay(text)
+  })
+
+  observer.observe(container, { childList: true, subtree: true })
+  console.log(`[DuoCue] Observing ${platform.name} subtitle container`)
+}
+
+function pollForContainer(platform, intervalMs = 500, timeoutMs = 30000) {
+  const start = Date.now()
+  const timer = setInterval(() => {
+    if (document.querySelector(platform.containerSelector)) {
+      clearInterval(timer)
+      startObserver(platform)
+      return
+    }
+    if (Date.now() - start > timeoutMs) {
+      clearInterval(timer)
+      console.warn('[DuoCue] Subtitle container not found after 30s — giving up')
+    }
+  }, intervalMs)
+}
+
+const platform = detectPlatform()
+if (platform) pollForContainer(platform)
