@@ -39,6 +39,26 @@ function extractText(platform) {
     .join('\n')
 }
 
+async function translate(text) {
+  const { translationApiKey } = await chrome.storage.local.get('translationApiKey')
+  if (!translationApiKey) return null
+
+  try {
+    const res = await fetch(
+      `https://translation.googleapis.com/language/translate/v2?key=${translationApiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ q: text, target: 'zh-TW', format: 'text' }),
+      }
+    )
+    const data = await res.json()
+    return data?.data?.translations?.[0]?.translatedText ?? null
+  } catch {
+    return null
+  }
+}
+
 function startObserver(platform) {
   const container = document.querySelector(platform.containerSelector)
   if (!container) return
