@@ -2,7 +2,7 @@ const PLATFORMS = [
   {
     name: 'HBO Max',
     hostname: 'play.hbomax.com',
-    containerSelector: '[class*="CaptionWindow-Fuse-Web-Play"]',
+    containerSelector: '[class*="VerticalCueSpacer-Fuse-Web-Play"]',
     textSelector: '[class*="TextCue-Fuse-Web-Play"]',
   },
 ]
