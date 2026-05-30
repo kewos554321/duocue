@@ -85,8 +85,20 @@ function startObserver(platform) {
     }, 150)
   })
 
-  observer.observe(container, { childList: true, subtree: true })
+  observer.observe(container, { childList: true, subtree: true, characterData: true })
   console.log(`[DuoCue] Observing ${platform.name} subtitle container`)
+
+  // fire once immediately for text already in DOM when observer starts
+  observer.takeRecords()
+  const existingText = extractText(platform)
+  if (existingText) {
+    updateOverlay(existingText, null)
+    clearTimeout(debounceTimer)
+    debounceTimer = setTimeout(async () => {
+      const chinese = await translate(existingText)
+      updateOverlay(existingText, chinese)
+    }, 150)
+  }
 }
 
 function pollForContainer(platform, intervalMs = 500, timeoutMs = 30000) {
