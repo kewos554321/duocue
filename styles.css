@@ -16,3 +16,14 @@
   white-space: pre-wrap;
   display: none;
 }
+
+.duocue-en {
+  color: #ffffff;
+  font-size: 1.4rem;
+}
+
+.duocue-zh {
+  color: #FFD700;
+  font-size: 1.2rem;
+  margin-top: 4px;
+}
