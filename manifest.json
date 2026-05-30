@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "DuoCue",
+  "version": "0.1.0",
+  "description": "Bilingual subtitles for streaming platforms",
+  "content_scripts": [
+    {
+      "matches": ["*://play.hbomax.com/*"],
+      "js": ["content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}
