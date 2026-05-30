@@ -65,10 +65,24 @@ function startObserver(platform) {
 
   createOverlay()
 
+  let debounceTimer = null
+
   const observer = new MutationObserver(() => {
-    const text = extractText(platform)
-    console.log(`[DuoCue] ${text || '(no subtitle)'}`)
-    updateOverlay(text)
+    const english = extractText(platform)
+    console.log(`[DuoCue] ${english || '(no subtitle)'}`)
+
+    if (!english) {
+      updateOverlay(null, null)
+      return
+    }
+
+    updateOverlay(english, null)
+
+    clearTimeout(debounceTimer)
+    debounceTimer = setTimeout(async () => {
+      const chinese = await translate(english)
+      updateOverlay(english, chinese)
+    }, 150)
   })
 
   observer.observe(container, { childList: true, subtree: true })
