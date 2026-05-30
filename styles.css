@@ -17,6 +17,10 @@
   display: none;
 }
 
+[class*="CaptionWindow-Fuse-Web-Play"] {
+  display: none !important;
+}
+
 .duocue-en {
   color: #ffffff;
   font-size: 1.4rem;
