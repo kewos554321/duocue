@@ -59,16 +59,19 @@ async function translate(text) {
   }
 }
 
-function startObserver(platform) {
-  const container = document.querySelector(platform.containerSelector)
-  if (!container) return
-
+function startPolling(platform) {
   createOverlay()
+  console.log(`[DuoCue] Polling subtitles for ${platform.name}`)
 
-  let debounceTimer = null
+  let lastText = null
+  let translateTimer = null
 
-  const observer = new MutationObserver(() => {
+  setInterval(async () => {
     const english = extractText(platform)
+
+    if (english === lastText) return
+    lastText = english
+
     console.log(`[DuoCue] ${english || '(no subtitle)'}`)
 
     if (!english) {
@@ -78,43 +81,13 @@ function startObserver(platform) {
 
     updateOverlay(english, null)
 
-    clearTimeout(debounceTimer)
-    debounceTimer = setTimeout(async () => {
+    clearTimeout(translateTimer)
+    translateTimer = setTimeout(async () => {
       const chinese = await translate(english)
       updateOverlay(english, chinese)
     }, 150)
-  })
-
-  observer.observe(container, { childList: true, subtree: true, characterData: true })
-  console.log(`[DuoCue] Observing ${platform.name} subtitle container`)
-
-  // fire once immediately for text already in DOM when observer starts
-  observer.takeRecords()
-  const existingText = extractText(platform)
-  if (existingText) {
-    updateOverlay(existingText, null)
-    clearTimeout(debounceTimer)
-    debounceTimer = setTimeout(async () => {
-      const chinese = await translate(existingText)
-      updateOverlay(existingText, chinese)
-    }, 150)
-  }
-}
-
-function pollForContainer(platform, intervalMs = 500, timeoutMs = 30000) {
-  const start = Date.now()
-  const timer = setInterval(() => {
-    if (document.querySelector(platform.containerSelector)) {
-      clearInterval(timer)
-      startObserver(platform)
-      return
-    }
-    if (Date.now() - start > timeoutMs) {
-      clearInterval(timer)
-      console.warn('[DuoCue] Subtitle container not found after 30s — giving up')
-    }
-  }, intervalMs)
+  }, 200)
 }
 
 const platform = detectPlatform()
-if (platform) pollForContainer(platform)
+if (platform) startPolling(platform)
