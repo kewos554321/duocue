@@ -3,6 +3,12 @@
   "name": "DuoCue",
   "version": "0.1.0",
   "description": "Bilingual subtitles for streaming platforms",
+  "permissions": ["storage"],
+  "host_permissions": ["https://translation.googleapis.com/*"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "DuoCue Settings"
+  },
   "content_scripts": [
     {
       "matches": ["*://play.hbomax.com/*"],
