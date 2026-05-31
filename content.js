@@ -85,6 +85,65 @@ function startPolling(platform) {
   createOverlay()
   console.log(`[DuoCue] Polling subtitles for ${platform.name}`)
 
+  let transcriptEnabled = false
+  let transcriptStartTime = null
+  let transcriptBuffer = []
+  let transcriptFull = false
+
+  chrome.storage.local.get(['transcriptEnabled', 'transcriptStorageFull'], (result) => {
+    transcriptEnabled = result.transcriptEnabled === true
+    transcriptFull = result.transcriptStorageFull === true
+    if (transcriptEnabled) transcriptStartTime = Date.now()
+  })
+
+  function elapsed() {
+    if (!transcriptStartTime) return '00:00:00'
+    const s = Math.floor((Date.now() - transcriptStartTime) / 1000)
+    const h = String(Math.floor(s / 3600)).padStart(2, '0')
+    const m = String(Math.floor((s % 3600) / 60)).padStart(2, '0')
+    const sec = String(s % 60).padStart(2, '0')
+    return `${h}:${m}:${sec}`
+  }
+
+  async function flushTranscriptBuffer() {
+    if (transcriptBuffer.length === 0) return
+    const toWrite = transcriptBuffer.splice(0)
+    const { transcriptLines = [] } = await chrome.storage.local.get('transcriptLines')
+    const updated = [...transcriptLines, ...toWrite]
+    await chrome.storage.local.set({ transcriptLines: updated })
+    const bytes = await chrome.storage.local.getBytesInUse('transcriptLines')
+    if (bytes > 9 * 1024 * 1024) {
+      transcriptFull = true
+      await chrome.storage.local.set({ transcriptStorageFull: true })
+    }
+  }
+
+  function recordSubtitle(text) {
+    transcriptBuffer.push({ t: elapsed(), text })
+    if (transcriptBuffer.length >= 10) flushTranscriptBuffer()
+  }
+
+  chrome.storage.onChanged.addListener((changes) => {
+    if (changes.transcriptEnabled) {
+      transcriptEnabled = changes.transcriptEnabled.newValue === true
+      if (transcriptEnabled) {
+        transcriptStartTime = Date.now()
+        transcriptFull = false
+      } else {
+        flushTranscriptBuffer()
+      }
+    }
+    if (changes.transcriptClearedAt) {
+      transcriptStartTime = Date.now()
+      transcriptBuffer = []
+      transcriptFull = false
+    }
+  })
+
+  window.addEventListener('beforeunload', () => {
+    flushTranscriptBuffer()
+  })
+
   let lastText = null
   let translateTimer = null
 
@@ -109,6 +168,7 @@ function startPolling(platform) {
     }
 
     updateOverlay(english, null)
+    if (transcriptEnabled && !transcriptFull) recordSubtitle(english)
 
     clearTimeout(translateTimer)
     translateTimer = setTimeout(async () => {
