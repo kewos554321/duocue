@@ -1,7 +1,8 @@
 # DuoCue — PoC 設計文件
 
-**日期：** 2026-05-30  
-**階段：** PoC（最小可測試實現）  
+**日期：** 2026-05-30
+**修訂：** 2026-05-31（更新為實際實現）
+**階段：** PoC（最小可測試實現）
 **目標：** 驗證能從串流平台抓取字幕並注入 overlay 顯示
 
 ---
@@ -37,13 +38,13 @@ duocue/
 
 ```
 串流平台播放器
-    ↓ 字幕出現/變動
-MutationObserver（observe platform adapter 指定的 containerSelector）
     ↓
-從 textSelector 取出 textContent
-    ↓
+setInterval 每 200ms 讀取 textSelector 的 textContent
+    ↓ 文字與上次不同時
 console.log + 更新 overlay <div>
 ```
+
+> **設計決策：** 原始設計使用 MutationObserver，但實測發現 HBO Max 在每次字幕變動時會替換整個 DOM 容器（包括 CaptionWindow 甚至 VerticalCueSpacer），導致 observer 靜默失效。改用 200ms polling 直接讀取 textSelector，完全迴避 DOM 替換問題。字幕每幾秒才換一次，200ms 輪詢效能影響可忽略。
 
 ---
 
@@ -58,7 +59,7 @@ const PLATFORMS = [
   {
     name: 'HBO Max',
     hostname: 'play.hbomax.com',
-    containerSelector: '[class*="CaptionWindow-Fuse-Web-Play"]',
+    containerSelector: '[class*="VerticalCueSpacer-Fuse-Web-Play"]',
     textSelector: '[class*="TextCue-Fuse-Web-Play"]',
   },
   // 未來在此新增其他平台
@@ -69,16 +70,17 @@ function detectPlatform() {
 }
 ```
 
-**選擇器說明：**  
+**選擇器說明：**
 HBO Max 使用 styled-components，class 格式為 `ComponentName-Fuse-Web-Play__sc-<hash>`。用 `[class*="..."]` substring 匹配避免 hash 變動影響。這是在 `play.hbomax.com` 實測確認的 class pattern。
+
+`textSelector` 直接指向 `TextCue`（字幕文字元素），不依賴任何容器存活。`containerSelector` 保留在 config 中供未來用途，但 polling 邏輯不依賴它。
 
 ### Content Script（`content.js`）
 
-1. `detectPlatform()` 取得 adapter，若無對應平台則靜默退出
-2. Poll（每 500ms）等待 `containerSelector` 元素出現
-3. 找到後建立 `#duocue-overlay` div append 到 body
-4. `MutationObserver` observe container，`childList: true, subtree: true`
-5. Callback：抓 `textSelector` 的 `textContent`，更新 overlay + console.log
+1. `detectPlatform()` 取得 platform config，若無對應平台則靜默退出
+2. `startPolling(platform)` 建立 overlay 並啟動 200ms interval
+3. 每次 tick：讀取 `textSelector` 的 textContent，若與上次相同則跳過
+4. 有變動時：console.log + 更新 overlay
 
 ### Overlay（`styles.css`）
 
@@ -107,10 +109,10 @@ HBO Max 使用 styled-components，class 格式為 `ComponentName-Fuse-Web-Play_
 
 ---
 
-## 潛在風險
+## 潛在風險與實測結論
 
-| 風險 | 說明 | 對策 |
-|------|------|------|
-| HBO 改版 class hash | styled-components hash 不固定 | 用 `[class*="ComponentName"]` substring 匹配 |
-| 播放器延遲載入 | 字幕容器非同步出現 | Poll 輪詢等待，最多等 30 秒 |
-| CSP 阻擋 | HBO 可能限制 inline style/script | Extension content script 不受 CSP 限制 |
+| 風險 | 說明 | 對策 | 實測結論 |
+|------|------|------|---------|
+| HBO 改版 class hash | styled-components hash 不固定 | 用 `[class*="ComponentName"]` substring 匹配 | ✅ 有效 |
+| DOM 容器被替換 | HBO 每次換字幕時替換整個容器，導致 observer 失效 | 改用 polling 直接讀 textSelector | ✅ polling 完全迴避此問題 |
+| CSP 阻擋 | HBO 可能限制 inline style/script | Extension content script 不受 CSP 限制 | ✅ 無問題 |
