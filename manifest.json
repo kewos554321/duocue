@@ -3,11 +3,21 @@
   "name": "DuoCue",
   "version": "0.1.0",
   "description": "Bilingual subtitles for streaming platforms",
-  "permissions": ["storage"],
+  "permissions": ["storage", "downloads"],
   "host_permissions": ["https://translation.googleapis.com/*"],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "DuoCue Settings"
+    "default_title": "DuoCue Settings",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
   },
   "content_scripts": [
     {
