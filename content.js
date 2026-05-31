@@ -149,6 +149,9 @@ function startPolling(platform) {
       transcriptBuffer = []
       transcriptFull = false
     }
+    if (changes.transcriptFlushAt) {
+      flushTranscriptBuffer()
+    }
   })
 
   window.addEventListener('beforeunload', () => {

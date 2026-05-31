@@ -21,6 +21,8 @@ function updateTranscriptStats(lines, isFull) {
 }
 
 async function downloadTranscript() {
+  await chrome.storage.local.set({ transcriptFlushAt: Date.now() })
+  await new Promise(r => setTimeout(r, 300))
   const { transcriptLines = [] } = await chrome.storage.local.get('transcriptLines')
   const now = new Date()
   const dateStr = now.toISOString().slice(0, 10)
@@ -37,7 +39,7 @@ async function downloadTranscript() {
   const url = URL.createObjectURL(blob)
   chrome.downloads.download(
     { url, filename: `duocue-transcript-${dateStr}.txt`, saveAs: true },
-    () => URL.revokeObjectURL(url)
+    () => setTimeout(() => URL.revokeObjectURL(url), 60_000)
   )
 }
 
