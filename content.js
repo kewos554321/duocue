@@ -18,6 +18,20 @@ function createOverlay() {
   document.body.appendChild(div)
 }
 
+let subtitleColor = '#FFD700'
+chrome.storage.local.get('subtitleColor', ({ subtitleColor: c }) => {
+  if (c) subtitleColor = c
+})
+
+chrome.storage.onChanged.addListener((changes) => {
+  if (changes.subtitleColor) {
+    subtitleColor = changes.subtitleColor.newValue
+    document.querySelectorAll('.duocue-zh').forEach(el => {
+      el.style.color = subtitleColor
+    })
+  }
+})
+
 function updateOverlay(english, chinese) {
   const overlay = document.getElementById('duocue-overlay')
   if (!overlay) return
@@ -26,7 +40,9 @@ function updateOverlay(english, chinese) {
     overlay.style.display = 'none'
     return
   }
-  const chineseHtml = chinese ? `<div class="duocue-zh">${chinese}</div>` : ''
+  const chineseHtml = chinese
+    ? `<div class="duocue-zh" style="color:${subtitleColor}">${chinese}</div>`
+    : ''
   overlay.innerHTML = `<div class="duocue-en">${english}</div>${chineseHtml}`
   overlay.style.display = 'block'
 }
