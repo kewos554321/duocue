@@ -7,186 +7,220 @@
 
     body {
       width: 300px;
-      background: #1C1C1E;
       font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+      background: #1C1C1E;
       color: #FFFFFF;
-      overflow: hidden;
     }
 
+    /* ── Header ── */
     .header {
       background: #2C2C2E;
       padding: 14px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid #3A3A3C;
     }
-
-    .header-left {
+    .header-title {
       display: flex;
       align-items: center;
       gap: 8px;
+      margin-bottom: 10px;
     }
-
-    .logo-dot {
-      width: 10px;
-      height: 10px;
-      background: #0A84FF;
+    .status-dot {
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
+      background: #30D158;
+      flex-shrink: 0;
     }
-
-    .header-title {
+    .title-text {
       font-size: 17px;
       font-weight: 600;
-      letter-spacing: -0.4px;
     }
-
-    .header-right {
+    .header-row {
       display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 4px;
+      align-items: center;
+      justify-content: space-between;
     }
-
-    .header-subtitle {
-      font-size: 12px;
+    .subtitle-text {
       color: #8E8E93;
+      font-size: 13px;
     }
 
+    /* ── Toggle ── */
     .toggle {
       width: 44px;
       height: 26px;
-      background: #636366;
       border-radius: 13px;
+      background: #636366;
       position: relative;
       cursor: pointer;
       transition: background 0.2s;
+      flex-shrink: 0;
     }
-
     .toggle.on { background: #30D158; }
-
     .toggle-knob {
-      width: 22px;
-      height: 22px;
-      background: #FFFFFF;
-      border-radius: 50%;
       position: absolute;
-      top: 2px;
-      left: 2px;
+      top: 3px;
+      left: 3px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: white;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
       transition: transform 0.2s;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
     }
-
     .toggle.on .toggle-knob { transform: translateX(18px); }
 
-    .body { padding: 16px; }
+    /* ── Divider ── */
+    .divider { height: 1px; background: #3A3A3C; }
 
+    /* ── Body ── */
+    .body {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* ── Color swatches ── */
+    .section-label {
+      color: #8E8E93;
+      font-size: 13px;
+      margin-bottom: 8px;
+      display: block;
+    }
+    .color-swatches {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .color-swatch {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid #3A3A3C;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      flex-shrink: 0;
+    }
+    .color-swatch.selected {
+      border-color: #FFFFFF;
+      box-shadow: 0 0 0 2px var(--swatch-color);
+    }
+    .color-custom {
+      background: conic-gradient(red, yellow, green, cyan, blue, magenta, red);
+    }
+
+    /* ── API Key ── */
     .field-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
-
     .field-label {
-      font-size: 13px;
       color: #8E8E93;
-      font-weight: 500;
+      font-size: 13px;
     }
+    .field-status { font-size: 12px; }
+    .field-status.set   { color: #30D158; }
+    .field-status.unset { color: #FF9F0A; }
 
-    .key-status {
-      font-size: 12px;
-      font-weight: 500;
-    }
-
-    .key-status.set { color: #30D158; }
-    .key-status.not-set { color: #FF9F0A; }
-
-    .input-wrapper {
-      position: relative;
-      margin-bottom: 12px;
-    }
-
-    .input-wrapper input {
+    .input-wrap { position: relative; }
+    .input-wrap input {
       width: 100%;
       height: 44px;
       background: #2C2C2E;
-      border: 1.5px solid #3A3A3C;
+      border: 1px solid #3A3A3C;
       border-radius: 10px;
-      color: #FFFFFF;
-      font-size: 15px;
-      font-family: inherit;
       padding: 0 44px 0 12px;
+      color: #FFFFFF;
+      font-size: 14px;
+      font-family: inherit;
       outline: none;
       transition: border-color 0.15s, box-shadow 0.15s;
     }
-
-    .input-wrapper input:focus {
+    .input-wrap input:focus {
       border-color: #0A84FF;
       box-shadow: 0 0 0 3px rgba(10,132,255,0.3);
     }
-
     .eye-btn {
       position: absolute;
       right: 12px;
       top: 50%;
       transform: translateY(-50%);
-      background: none;
-      border: none;
       cursor: pointer;
       font-size: 16px;
-      padding: 0;
-      line-height: 1;
-      opacity: 0.6;
-      transition: opacity 0.15s;
+      color: #8E8E93;
+      user-select: none;
     }
 
-    .eye-btn:hover { opacity: 1; }
-
-    .save-btn {
+    /* ── Save button ── */
+    #save {
       width: 100%;
       height: 44px;
       background: #0A84FF;
+      color: white;
       border: none;
       border-radius: 10px;
-      color: #FFFFFF;
       font-size: 15px;
       font-weight: 600;
       font-family: inherit;
       cursor: pointer;
-      transition: background 0.2s, opacity 0.15s;
+      transition: background 0.2s;
     }
-
-    .save-btn:hover { opacity: 0.85; }
-    .save-btn.saved { background: #30D158; }
+    #save.saved { background: #30D158; }
   </style>
 </head>
 <body>
+
+  <!-- Header -->
   <div class="header">
-    <div class="header-left">
-      <div class="logo-dot"></div>
-      <span class="header-title">DuoCue</span>
+    <div class="header-title">
+      <div class="status-dot"></div>
+      <span class="title-text">DuoCue</span>
     </div>
-    <div class="header-right">
-      <span class="header-subtitle">Bilingual Subtitles</span>
-      <div class="toggle on" id="toggle">
+    <div class="header-row">
+      <span class="subtitle-text">Bilingual Subtitles</span>
+      <div class="toggle" id="toggle">
         <div class="toggle-knob"></div>
       </div>
     </div>
   </div>
 
+  <div class="divider"></div>
+
+  <!-- Body -->
   <div class="body">
-    <div class="field-header">
-      <span class="field-label">API Key</span>
-      <span class="key-status not-set" id="keyStatus">⚠ Not set</span>
+
+    <!-- Color section -->
+    <div>
+      <span class="section-label">字幕顏色</span>
+      <div class="color-swatches">
+        <div class="color-swatch" data-color="#FFD700" style="background:#FFD700;--swatch-color:#FFD700"></div>
+        <div class="color-swatch" data-color="#FFFFFF" style="background:#FFFFFF;--swatch-color:#FFFFFF"></div>
+        <div class="color-swatch" data-color="#00E5FF" style="background:#00E5FF;--swatch-color:#00E5FF"></div>
+        <div class="color-swatch" data-color="#FF6B6B" style="background:#FF6B6B;--swatch-color:#FF6B6B"></div>
+        <div class="color-swatch" data-color="#98FB98" style="background:#98FB98;--swatch-color:#98FB98"></div>
+        <div class="color-swatch color-custom" id="customSwatch"></div>
+      </div>
+      <input type="color" id="colorPicker" style="display:none">
     </div>
 
-    <div class="input-wrapper">
-      <input type="password" id="apiKey" placeholder="AIza..." autocomplete="off">
-      <button class="eye-btn" id="eyeBtn" title="Toggle visibility">👁</button>
+    <div class="divider"></div>
+
+    <!-- API Key section -->
+    <div>
+      <div class="field-header">
+        <span class="field-label">API Key</span>
+        <span class="field-status" id="keyStatus"></span>
+      </div>
+      <div class="input-wrap">
+        <input type="password" id="apiKey" placeholder="AIza...">
+        <span class="eye-btn" id="eyeBtn">👁</span>
+      </div>
     </div>
 
-    <button class="save-btn" id="saveBtn">Save Key</button>
+    <button id="save">Save Key</button>
+
   </div>
 
   <script src="popup.js"></script>
