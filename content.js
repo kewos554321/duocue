@@ -19,13 +19,19 @@ function createOverlay() {
 }
 
 let subtitleColor = '#FFD700'
+
+function sanitizeColor(c) {
+  return /^#[0-9A-Fa-f]{3,8}$|^[a-zA-Z]+$/.test(c) ? c : '#FFD700'
+}
+
 chrome.storage.local.get('subtitleColor', ({ subtitleColor: c }) => {
-  if (c) subtitleColor = c
+  if (c) subtitleColor = sanitizeColor(c)
 })
 
-chrome.storage.onChanged.addListener((changes) => {
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName !== 'local') return
   if (changes.subtitleColor) {
-    subtitleColor = changes.subtitleColor.newValue
+    subtitleColor = sanitizeColor(changes.subtitleColor.newValue)
     document.querySelectorAll('.duocue-zh').forEach(el => {
       el.style.color = subtitleColor
     })
