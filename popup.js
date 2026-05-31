@@ -1,43 +1,47 @@
-const toggle = document.getElementById('toggle')
+const toggle      = document.getElementById('toggle')
 const apiKeyInput = document.getElementById('apiKey')
-const eyeBtn = document.getElementById('eyeBtn')
-const saveBtn = document.getElementById('saveBtn')
-const keyStatus = document.getElementById('keyStatus')
+const eyeBtn      = document.getElementById('eyeBtn')
+const keyStatus   = document.getElementById('keyStatus')
+const saveBtn     = document.getElementById('save')
+const colorPicker = document.getElementById('colorPicker')
+const customSwatch = document.getElementById('customSwatch')
+const swatches    = document.querySelectorAll('.color-swatch[data-color]')
 
-// Load saved state on open
-chrome.storage.local.get(['translationApiKey', 'enabled'], ({ translationApiKey, enabled }) => {
-  if (enabled === false) {
-    toggle.classList.remove('on')
+// ── Init ──────────────────────────────────────────────────────────────────
+chrome.storage.local.get(['translationApiKey', 'enabled', 'subtitleColor'], (data) => {
+  // Toggle
+  if (data.enabled !== false) toggle.classList.add('on')
+
+  // API Key
+  if (data.translationApiKey) {
+    apiKeyInput.value = data.translationApiKey
+    setKeyStatus(true)
+  } else {
+    setKeyStatus(false)
   }
 
-  if (translationApiKey) {
-    apiKeyInput.value = translationApiKey
-    keyStatus.textContent = '✓ Set'
-    keyStatus.className = 'key-status set'
-  }
+  // Color
+  selectColor(data.subtitleColor || '#FFD700')
 })
 
-// Toggle: enable / disable DuoCue
+// ── Toggle ────────────────────────────────────────────────────────────────
 toggle.addEventListener('click', () => {
   const isOn = toggle.classList.toggle('on')
   chrome.storage.local.set({ enabled: isOn })
 })
 
-// Eye button: show / hide API key
-let keyVisible = false
+// ── Eye button ────────────────────────────────────────────────────────────
 eyeBtn.addEventListener('click', () => {
-  keyVisible = !keyVisible
-  apiKeyInput.type = keyVisible ? 'text' : 'password'
-  eyeBtn.textContent = keyVisible ? '🙈' : '👁'
+  const isPassword = apiKeyInput.type === 'password'
+  apiKeyInput.type = isPassword ? 'text' : 'password'
+  eyeBtn.textContent = isPassword ? '🙈' : '👁'
 })
 
-// Save button: persist key + visual feedback
+// ── Save Key ──────────────────────────────────────────────────────────────
 saveBtn.addEventListener('click', () => {
   const key = apiKeyInput.value.trim()
   chrome.storage.local.set({ translationApiKey: key }, () => {
-    keyStatus.textContent = key ? '✓ Set' : '⚠ Not set'
-    keyStatus.className = key ? 'key-status set' : 'key-status not-set'
-
+    setKeyStatus(!!key)
     saveBtn.textContent = '✓ Saved'
     saveBtn.classList.add('saved')
     setTimeout(() => {
@@ -46,3 +50,45 @@ saveBtn.addEventListener('click', () => {
     }, 1500)
   })
 })
+
+// ── Color swatches ────────────────────────────────────────────────────────
+swatches.forEach(swatch => {
+  swatch.addEventListener('click', () => {
+    const color = swatch.dataset.color
+    selectColor(color)
+    chrome.storage.local.set({ subtitleColor: color })
+  })
+})
+
+customSwatch.addEventListener('click', () => colorPicker.click())
+
+colorPicker.addEventListener('input', () => {
+  const color = colorPicker.value
+  selectColor(color, true)
+  chrome.storage.local.set({ subtitleColor: color })
+})
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+function selectColor(color, isCustom = false) {
+  swatches.forEach(s => s.classList.remove('selected'))
+  customSwatch.classList.remove('selected')
+
+  if (!isCustom) {
+    const match = [...swatches].find(
+      s => s.dataset.color.toLowerCase() === color.toLowerCase()
+    )
+    if (match) {
+      match.classList.add('selected')
+      return
+    }
+  }
+
+  // 自訂顏色（或找不到對應的預設色票）
+  customSwatch.classList.add('selected')
+  colorPicker.value = color
+}
+
+function setKeyStatus(isSet) {
+  keyStatus.textContent = isSet ? '✓ Set' : '⚠ Not set'
+  keyStatus.className = 'field-status ' + (isSet ? 'set' : 'unset')
+}
