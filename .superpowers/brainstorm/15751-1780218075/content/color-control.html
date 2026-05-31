@@ -1,0 +1,91 @@
+<h2>第二語言顏色控制 — 選哪種方式？</h2>
+<p class="subtitle">在 Popup 裡讓用戶調整中文字幕顏色</p>
+
+<div class="cards">
+
+  <!-- Option A -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#1C1C1E;border-radius:12px;padding:16px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;width:220px;margin:0 auto;">
+        <div style="background:#2C2C2E;border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">
+          <span style="color:#8E8E93;font-size:12px;">⬤ DuoCue</span>
+          <div style="width:36px;height:22px;background:#30D158;border-radius:11px;position:relative;">
+            <div style="position:absolute;right:3px;top:3px;width:16px;height:16px;background:white;border-radius:50%;"></div>
+          </div>
+        </div>
+        <div style="padding:4px 0 8px;">
+          <div style="color:#8E8E93;font-size:11px;margin-bottom:8px;">字幕顏色</div>
+          <div style="display:flex;gap:8px;">
+            <div style="width:28px;height:28px;border-radius:50%;background:#FFD700;border:2px solid white;"></div>
+            <div style="width:28px;height:28px;border-radius:50%;background:#ffffff;border:2px solid #3A3A3C;"></div>
+            <div style="width:28px;height:28px;border-radius:50%;background:#00E5FF;border:2px solid #3A3A3C;"></div>
+            <div style="width:28px;height:28px;border-radius:50%;background:#FF6B6B;border:2px solid #3A3A3C;"></div>
+            <div style="width:28px;height:28px;border-radius:50%;background:#98FB98;border:2px solid #3A3A3C;"></div>
+          </div>
+        </div>
+        <div style="background:#0A84FF;border-radius:10px;padding:10px;text-align:center;color:white;font-size:13px;font-weight:600;">Save</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — 預設色票</h3>
+      <p>5–6 個精選顏色，點擊即選。最簡單，Apple 風格最一致。</p>
+    </div>
+  </div>
+
+  <!-- Option B -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#1C1C1E;border-radius:12px;padding:16px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;width:220px;margin:0 auto;">
+        <div style="background:#2C2C2E;border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">
+          <span style="color:#8E8E93;font-size:12px;">⬤ DuoCue</span>
+          <div style="width:36px;height:22px;background:#30D158;border-radius:11px;position:relative;">
+            <div style="position:absolute;right:3px;top:3px;width:16px;height:16px;background:white;border-radius:50%;"></div>
+          </div>
+        </div>
+        <div style="padding:4px 0 8px;">
+          <div style="color:#8E8E93;font-size:11px;margin-bottom:8px;">字幕顏色</div>
+          <div style="display:flex;align-items:center;gap:10px;background:#2C2C2E;border-radius:10px;padding:10px 12px;">
+            <div style="width:28px;height:28px;border-radius:6px;background:#FFD700;border:2px solid #3A3A3C;"></div>
+            <span style="color:#FFFFFF;font-size:13px;flex:1;">#FFD700</span>
+            <div style="width:24px;height:24px;border-radius:6px;background:linear-gradient(135deg,red,yellow,green,blue,violet);border:none;"></div>
+          </div>
+        </div>
+        <div style="background:#0A84FF;border-radius:10px;padding:10px;text-align:center;color:white;font-size:13px;font-weight:600;">Save</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — 原生 Color Picker</h3>
+      <p>系統色彩選擇器，可選任意顏色。彈性最高，但 UI 最複雜。</p>
+    </div>
+  </div>
+
+  <!-- Option C -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div style="background:#1C1C1E;border-radius:12px;padding:16px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;width:220px;margin:0 auto;">
+        <div style="background:#2C2C2E;border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">
+          <span style="color:#8E8E93;font-size:12px;">⬤ DuoCue</span>
+          <div style="width:36px;height:22px;background:#30D158;border-radius:11px;position:relative;">
+            <div style="position:absolute;right:3px;top:3px;width:16px;height:16px;background:white;border-radius:50%;"></div>
+          </div>
+        </div>
+        <div style="padding:4px 0 8px;">
+          <div style="color:#8E8E93;font-size:11px;margin-bottom:8px;">字幕顏色</div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <div style="width:28px;height:28px;border-radius:50%;background:#FFD700;border:2px solid white;"></div>
+            <div style="width:28px;height:28px;border-radius:50%;background:#ffffff;border:2px solid #3A3A3C;"></div>
+            <div style="width:28px;height:28px;border-radius:50%;background:#00E5FF;border:2px solid #3A3A3C;"></div>
+            <div style="width:28px;height:28px;border-radius:50%;background:#FF6B6B;border:2px solid #3A3A3C;"></div>
+            <div style="width:26px;height:26px;border-radius:50%;background:conic-gradient(red,yellow,green,blue,violet,red);border:2px solid #3A3A3C;"></div>
+          </div>
+        </div>
+        <div style="background:#0A84FF;border-radius:10px;padding:10px;text-align:center;color:white;font-size:13px;font-weight:600;">Save</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — 預設色票 + 自訂</h3>
+      <p>幾個預設顏色 + 最後一顆開啟完整色盤。兩者兼顧。</p>
+    </div>
+  </div>
+
+</div>

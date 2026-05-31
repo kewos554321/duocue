@@ -1,0 +1,6 @@
+{"type":"server-started","port":53863,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:53863","screen_dir":"/Users/kewos/Documents/projects/duocue/.superpowers/brainstorm/15751-1780218075/content","state_dir":"/Users/kewos/Documents/projects/duocue/.superpowers/brainstorm/15751-1780218075/state"}
+{"type":"screen-added","file":"/Users/kewos/Documents/projects/duocue/.superpowers/brainstorm/15751-1780218075/content/color-control.html"}
+{"type":"screen-added","file":"/Users/kewos/Documents/projects/duocue/.superpowers/brainstorm/15751-1780218075/content/waiting.html"}
+{"type":"screen-added","file":"/Users/kewos/Documents/projects/duocue/.superpowers/brainstorm/15751-1780218075/content/design-layout.html"}
+{"type":"screen-added","file":"/Users/kewos/Documents/projects/duocue/.superpowers/brainstorm/15751-1780218075/content/layout-options.html"}
+{"type":"server-stopped","reason":"idle timeout"}
