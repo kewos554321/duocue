@@ -40,7 +40,10 @@ eyeBtn.addEventListener('click', () => {
 // ── Save Key ──────────────────────────────────────────────────────────────
 saveBtn.addEventListener('click', () => {
   const key = apiKeyInput.value.trim()
-  chrome.storage.local.set({ translationApiKey: key }, () => {
+  const action = key
+    ? chrome.storage.local.set.bind(null, { translationApiKey: key })
+    : chrome.storage.local.remove.bind(null, 'translationApiKey')
+  action(() => {
     setKeyStatus(!!key)
     saveBtn.textContent = '✓ Saved'
     saveBtn.classList.add('saved')
