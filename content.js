@@ -67,6 +67,13 @@ function startPolling(platform) {
   let translateTimer = null
 
   setInterval(async () => {
+    const { enabled } = await chrome.storage.local.get('enabled')
+    if (enabled === false) {
+      updateOverlay(null, null)
+      lastText = null
+      return
+    }
+
     const english = extractText(platform)
 
     if (english === lastText) return
