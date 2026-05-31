@@ -10,6 +10,7 @@
       font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
       background: #1C1C1E;
       color: #FFFFFF;
+      overflow: hidden;
     }
 
     /* ── Header ── */
@@ -168,6 +169,7 @@
       transition: background 0.2s;
     }
     #save.saved { background: #30D158; }
+    #save:hover { opacity: 0.9; }
   </style>
 </head>
 <body>
@@ -200,7 +202,7 @@
         <div class="color-swatch" data-color="#00E5FF" style="background:#00E5FF;--swatch-color:#00E5FF"></div>
         <div class="color-swatch" data-color="#FF6B6B" style="background:#FF6B6B;--swatch-color:#FF6B6B"></div>
         <div class="color-swatch" data-color="#98FB98" style="background:#98FB98;--swatch-color:#98FB98"></div>
-        <div class="color-swatch color-custom" id="customSwatch"></div>
+        <div class="color-swatch color-custom" id="customSwatch" style="--swatch-color:#FFFFFF"></div>
       </div>
       <input type="color" id="colorPicker" style="display:none">
     </div>
