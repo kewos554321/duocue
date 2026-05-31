@@ -35,13 +35,12 @@ async function downloadTranscript() {
     '',
   ].join('\n')
   const body = transcriptLines.map(l => `[${l.t}] ${l.text}`).join('\n')
-  // data: URL is self-contained — blob: URLs die when the popup closes on focus loss
-  const dataUrl = 'data:text/plain;charset=utf-8,' + encodeURIComponent(header + body)
-  chrome.downloads.download({
-    url: dataUrl,
-    filename: `duocue-transcript-${dateStr}.txt`,
-    saveAs: true,
-  })
+  const blob = new Blob([header + body], { type: 'text/plain' })
+  const url = URL.createObjectURL(blob)
+  chrome.downloads.download(
+    { url, filename: `duocue-transcript-${dateStr}.txt`, saveAs: true },
+    () => setTimeout(() => URL.revokeObjectURL(url), 60_000)
+  )
 }
 
 async function clearTranscript() {
