@@ -54,15 +54,14 @@ async function clearTranscript() {
 chrome.storage.local.get(
   ['translationApiKey', 'enabled', 'subtitleColor', 'transcriptEnabled', 'transcriptLines', 'transcriptStorageFull'],
   ({ translationApiKey, enabled, subtitleColor, transcriptEnabled, transcriptLines = [], transcriptStorageFull }) => {
-    if (enabled === false) {
-      toggle.classList.remove('on')
+    if (enabled !== false) {
+      toggle.classList.add('on')
     }
 
     if (translationApiKey) {
       apiKeyInput.value = translationApiKey
-      keyStatus.textContent = '✓ Set'
-      keyStatus.className = 'key-status set'
     }
+    setKeyStatus(!!translationApiKey)
 
     selectColor(subtitleColor || '#FFD700')
 
