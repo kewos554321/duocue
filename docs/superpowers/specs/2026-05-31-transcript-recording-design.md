@@ -16,7 +16,7 @@ Add opt-in subtitle transcript recording to DuoCue. While the user watches, DuoC
 - **Off by default.** User must explicitly enable via a toggle in the popup.
 - **Timestamp + English text only.** No Chinese translation in the transcript (for now).
 - **Elapsed time timestamps.** Timer starts from when the Transcript toggle is turned on. Format: `HH:MM:SS`.
-- **Batched writes.** In-memory buffer flushed to `chrome.storage.local` every 10 new lines to minimize I/O.
+- **Batched writes.** In-memory buffer flushed to `chrome.storage.local` every 3 new lines. (Reduced from 10 to limit data loss on page close — MV3 content scripts cannot complete async writes in `beforeunload`, so at most 2 lines may be lost on hard navigation.)
 - **Storage warning at 9 MB.** Popup displays an orange banner and stops recording. User must download and clear before recording can resume.
 - **User-chosen download path.** Uses `chrome.downloads` API with `saveAs: true` to show the native Save dialog.
 - **Recording is gated on both toggles.** If the main DuoCue toggle is off, transcript recording also stops — even if the Transcript toggle is on.
