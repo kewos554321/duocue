@@ -170,6 +170,77 @@
     }
     #save.saved { background: #30D158; }
     #save:hover { opacity: 0.9; }
+
+    /* ── Transcript ── */
+    .transcript-body {
+      margin-top: 12px;
+    }
+
+    .transcript-body.hidden { display: none; }
+
+    .transcript-stats {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: #8E8E93;
+      margin-bottom: 10px;
+    }
+
+    .recording-dot {
+      width: 8px;
+      height: 8px;
+      background: #30D158;
+      border-radius: 50%;
+      flex-shrink: 0;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .transcript-warning {
+      background: rgba(255, 159, 10, 0.15);
+      border: 1px solid rgba(255, 159, 10, 0.4);
+      border-radius: 8px;
+      color: #FF9F0A;
+      font-size: 12px;
+      padding: 8px 10px;
+      margin-bottom: 10px;
+    }
+
+    .transcript-warning.hidden { display: none; }
+
+    .transcript-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .action-btn {
+      flex: 1;
+      height: 38px;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .action-btn:hover { opacity: 0.85; }
+
+    .download-btn {
+      background: #0A84FF;
+      color: #FFFFFF;
+    }
+
+    .clear-btn {
+      background: #3A3A3C;
+      color: #FFFFFF;
+    }
   </style>
 </head>
 <body>
@@ -223,6 +294,30 @@
 
     <button id="save">Save Key</button>
 
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="body">
+    <div class="field-header">
+      <span class="field-label">Transcript</span>
+      <div class="toggle" id="transcriptToggle">
+        <div class="toggle-knob"></div>
+      </div>
+    </div>
+    <div class="transcript-body hidden" id="transcriptBody">
+      <div class="transcript-stats">
+        <span class="recording-dot"></span>
+        <span id="transcriptStats">0 lines · 0 KB</span>
+      </div>
+      <div class="transcript-warning hidden" id="transcriptWarning">
+        ⚠ Storage 接近上限，請下載並清除
+      </div>
+      <div class="transcript-actions">
+        <button class="action-btn download-btn" id="downloadBtn">Download .txt</button>
+        <button class="action-btn clear-btn" id="clearBtn">Clear</button>
+      </div>
+    </div>
   </div>
 
   <script src="popup.js"></script>
