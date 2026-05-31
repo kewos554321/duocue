@@ -88,6 +88,7 @@ function selectColor(color, isCustom = false) {
 
   // 自訂顏色（或找不到對應的預設色票）
   customSwatch.classList.add('selected')
+  customSwatch.style.setProperty('--swatch-color', color)
   colorPicker.value = color
 }
 
