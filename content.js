@@ -107,6 +107,16 @@ function startPolling(platform) {
   createOverlay()
   console.log(`[DuoCue] Polling subtitles for ${platform.name}`)
 
+  document.addEventListener('fullscreenchange', () => {
+    const overlay = document.getElementById('duocue-overlay')
+    if (!overlay) return
+    if (document.fullscreenElement) {
+      document.fullscreenElement.appendChild(overlay)
+    } else {
+      document.body.appendChild(overlay)
+    }
+  })
+
   let transcriptEnabled = false
   let transcriptStartTime = null
   let transcriptBuffer = []
