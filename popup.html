@@ -88,6 +88,10 @@
       color: #FFFFFF;
       font-weight: 600;
     }
+    .seg-btn:focus-visible {
+      outline: 2px solid #0A84FF;
+      outline-offset: 2px;
+    }
 
     /* ── Divider ── */
     .divider { height: 1px; background: #3A3A3C; margin: 0 16px; }
@@ -275,7 +279,7 @@
       </div>
     </div>
     <!-- Row 2: display mode segmented control -->
-    <div class="seg-control" id="segControl">
+    <div class="seg-control" id="segControl" role="group" aria-label="Display mode">
       <button class="seg-btn active" data-mode="both">兩者</button>
       <button class="seg-btn" data-mode="original">原文</button>
       <button class="seg-btn" data-mode="translation">翻譯</button>
