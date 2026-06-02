@@ -105,7 +105,6 @@ async function translate(text) {
 
 function startPolling(platform) {
   createOverlay()
-  console.log(`[DuoCue] Polling subtitles for ${platform.name}`)
 
   // Keep overlay inside playerContainer so it survives fullscreen transitions.
   // HBO Max fullscreens playerContainer, so the overlay must be its descendant.
@@ -205,8 +204,6 @@ function startPolling(platform) {
 
     if (english === lastEnglish) return
     lastEnglish = english
-
-    console.log(`[DuoCue] ${english || '(no subtitle)'}`)
 
     if (!english) {
       updateOverlay(null, null)
