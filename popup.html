@@ -264,6 +264,63 @@
       background: #3A3A3C;
       color: #FFFFFF;
     }
+
+    /* ── Font size slider ── */
+    .slider-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .slider-value {
+      color: #0A84FF;
+      font-size: 13px;
+      font-weight: 500;
+      min-width: 32px;
+      text-align: right;
+    }
+    input[type="range"] {
+      width: 100%;
+      height: 4px;
+      accent-color: #0A84FF;
+      cursor: pointer;
+      background: transparent;
+      margin: 0;
+    }
+
+    /* ── Font family select ── */
+    .select-wrap {
+      position: relative;
+    }
+    .select-wrap select {
+      width: 100%;
+      height: 44px;
+      background: #2C2C2E;
+      border: 1px solid #3A3A3C;
+      border-radius: 10px;
+      padding: 0 36px 0 12px;
+      color: #FFFFFF;
+      font-size: 14px;
+      font-family: inherit;
+      appearance: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .select-wrap select:focus {
+      border-color: #0A84FF;
+    }
+    .select-wrap::after {
+      content: '▼';
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #8E8E93;
+      font-size: 10px;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
@@ -303,6 +360,39 @@
         <div class="color-swatch color-custom" id="customSwatch" style="--swatch-color:#FFFFFF"></div>
       </div>
       <input type="color" id="colorPicker" style="display:none">
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Font size -->
+    <div>
+      <div class="slider-row">
+        <span class="section-label" style="margin-bottom:0">字型大小</span>
+        <span class="slider-value" id="fontSizeLabel">18pt</span>
+      </div>
+      <input type="range" id="fontSizeRange" min="12" max="32" step="1" value="18">
+    </div>
+
+    <!-- Font family -->
+    <div>
+      <span class="section-label">字型</span>
+      <div class="select-wrap">
+        <select id="fontFamilySelect">
+          <option value="Arial, sans-serif">Arial, sans-serif（系統預設）</option>
+          <option value="Georgia, serif">Georgia, serif（有襯線）</option>
+          <option value='"Courier New", monospace'>Courier New, monospace（等寬）</option>
+          <option value='"Helvetica Neue", sans-serif'>Helvetica Neue</option>
+          <option value="Impact, sans-serif">Impact（粗黑體）</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Bold toggle -->
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <span class="section-label" style="margin-bottom:0">粗體</span>
+      <div class="toggle" id="boldToggle">
+        <div class="toggle-knob"></div>
+      </div>
     </div>
 
     <div class="divider"></div>
