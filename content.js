@@ -15,10 +15,16 @@ function createOverlay() {
   if (document.getElementById('duocue-overlay')) return
   const div = document.createElement('div')
   div.id = 'duocue-overlay'
+  div.style.fontSize   = `${fontSize}px`
+  div.style.fontFamily = fontFamily
+  div.style.fontWeight = bold ? 'bold' : 'normal'
   document.body.appendChild(div)
 }
 
 let subtitleColor = '#FFD700'
+let fontSize   = 18
+let fontFamily = 'Arial, sans-serif'
+let bold       = false
 
 function sanitizeColor(c) {
   return /^#[0-9A-Fa-f]{3,8}$|^[a-zA-Z]+$/.test(c) ? c : '#FFD700'
@@ -26,6 +32,12 @@ function sanitizeColor(c) {
 
 chrome.storage.local.get('subtitleColor', ({ subtitleColor: c }) => {
   if (c) subtitleColor = sanitizeColor(c)
+})
+
+chrome.storage.local.get(['fontSize', 'fontFamily', 'bold'], ({ fontSize: fs, fontFamily: ff, bold: b }) => {
+  if (fs != null) fontSize   = fs
+  if (ff != null) fontFamily = ff
+  if (b  != null) bold       = b
 })
 
 let displayMode = 'both'
@@ -47,6 +59,21 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
   if (changes.displayMode) {
     displayMode = changes.displayMode.newValue
     if (lastEnglish) updateOverlay(lastEnglish, lastChinese)
+  }
+  if (changes.fontSize) {
+    fontSize = changes.fontSize.newValue
+    const el = document.getElementById('duocue-overlay')
+    if (el) el.style.fontSize = `${fontSize}px`
+  }
+  if (changes.fontFamily) {
+    fontFamily = changes.fontFamily.newValue
+    const el = document.getElementById('duocue-overlay')
+    if (el) el.style.fontFamily = fontFamily
+  }
+  if (changes.bold) {
+    bold = changes.bold.newValue
+    const el = document.getElementById('duocue-overlay')
+    if (el) el.style.fontWeight = bold ? 'bold' : 'normal'
   }
 })
 
