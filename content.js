@@ -107,15 +107,18 @@ function startPolling(platform) {
   createOverlay()
   console.log(`[DuoCue] Polling subtitles for ${platform.name}`)
 
-  document.addEventListener('fullscreenchange', () => {
+  // Re-parent overlay when fullscreen state changes.
+  // Poll-based (not event-based) because some players don't fire fullscreenchange.
+  let lastFullscreenEl = null
+  function syncOverlayParent() {
+    const fs = document.fullscreenElement || document.webkitFullscreenElement || null
+    if (fs === lastFullscreenEl) return
+    lastFullscreenEl = fs
     const overlay = document.getElementById('duocue-overlay')
-    if (!overlay) return
-    if (document.fullscreenElement) {
-      document.fullscreenElement.appendChild(overlay)
-    } else {
-      document.body.appendChild(overlay)
-    }
-  })
+    if (overlay) (fs || document.body).appendChild(overlay)
+  }
+  document.addEventListener('fullscreenchange', syncOverlayParent)
+  document.addEventListener('webkitfullscreenchange', syncOverlayParent)
 
   let transcriptEnabled = false
   let transcriptStartTime = null
@@ -192,6 +195,7 @@ function startPolling(platform) {
   let translateTimer = null
 
   setInterval(async () => {
+    syncOverlayParent()
     const { enabled } = await chrome.storage.local.get('enabled')
     if (enabled === false) {
       updateOverlay(null, null)
