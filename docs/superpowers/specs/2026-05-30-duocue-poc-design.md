@@ -89,7 +89,14 @@ HBO Max 使用 styled-components，class 格式為 `ComponentName-Fuse-Web-Play_
 - `z-index: 99999` 確保疊在播放器上方
 - 無字幕時 `display: none`
 
-**全螢幕行為：** 瀏覽器 Fullscreen API 只渲染進入全螢幕的 element 及其子元素。Overlay 預設掛在 `document.body`，進全螢幕時 HBO Max 的 video player element 會覆蓋它。解法：監聽 `fullscreenchange`，進全螢幕時將 overlay 移入 `document.fullscreenElement`，離開時移回 `document.body`。
+**全螢幕行為：** 瀏覽器 Fullscreen API 只渲染進入全螢幕的 element 及其子元素。Overlay 若掛在 `document.body` 下，進全螢幕後會被播放器覆蓋而消失。
+
+調查結果（HBO Max）：
+- HBO Max 使用 webkit-prefixed fullscreen API（`webkitRequestFullscreen`），只觸發 `webkitfullscreenchange`，不觸發標準 `fullscreenchange`。
+- Chrome content script isolated world 無法存取 `document.webkitFullscreenElement`，因此無法靠 fullscreen API 判斷狀態。
+- HBO Max 進全螢幕的目標 element 是 `[data-testid="playerContainer"]`，且該 element 設有 `overflow: hidden` 及 `transform`（後者使 `position: fixed` 子元素以 playerContainer 為 containing block）。
+
+**解法：** 不依賴 fullscreen API。在 200ms polling loop 裡，每 tick 用 `document.querySelector('[data-testid="playerContainer"]')` 找到播放器容器，若 overlay 不在其內則立即移入。playerContainer 缺席時退回 `document.body`。此方式同時處理一般視窗與全螢幕，並自動應對 SPA remount。
 
 ---
 
