@@ -12,6 +12,7 @@ const transcriptStatsEl = document.getElementById('transcriptStats')
 const transcriptWarning = document.getElementById('transcriptWarning')
 const downloadBtn = document.getElementById('downloadBtn')
 const clearBtn = document.getElementById('clearBtn')
+const segBtns     = document.querySelectorAll('.seg-btn')
 
 // ── Transcript helpers ────────────────────────────────────────────────────
 function updateTranscriptStats(lines, isFull) {
@@ -54,8 +55,8 @@ async function clearTranscript() {
 
 // ── Init ──────────────────────────────────────────────────────────────────
 chrome.storage.local.get(
-  ['translationApiKey', 'enabled', 'subtitleColor', 'transcriptEnabled', 'transcriptLines', 'transcriptStorageFull'],
-  ({ translationApiKey, enabled, subtitleColor, transcriptEnabled, transcriptLines = [], transcriptStorageFull }) => {
+  ['translationApiKey', 'enabled', 'subtitleColor', 'displayMode', 'transcriptEnabled', 'transcriptLines', 'transcriptStorageFull'],
+  ({ translationApiKey, enabled, subtitleColor, displayMode, transcriptEnabled, transcriptLines = [], transcriptStorageFull }) => {
     if (enabled !== false) {
       toggle.classList.add('on')
     }
@@ -66,6 +67,9 @@ chrome.storage.local.get(
     setKeyStatus(!!translationApiKey)
 
     selectColor(subtitleColor || '#FFD700')
+
+    // Display Mode
+    selectMode(displayMode || 'both')
 
     if (transcriptEnabled === true) {
       transcriptToggle.classList.add('on')
@@ -106,6 +110,15 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
 // ── Download / Clear ──────────────────────────────────────────────────────
 downloadBtn.addEventListener('click', downloadTranscript)
 clearBtn.addEventListener('click', clearTranscript)
+
+// ── Display Mode ──────────────────────────────────────────────────────────
+segBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const mode = btn.dataset.mode
+    selectMode(mode)
+    chrome.storage.local.set({ displayMode: mode })
+  })
+})
 
 // ── Eye button ────────────────────────────────────────────────────────────
 eyeBtn.addEventListener('click', () => {
@@ -167,6 +180,12 @@ function selectColor(color, isCustom = false) {
   customSwatch.classList.add('selected')
   customSwatch.style.setProperty('--swatch-color', color)
   colorPicker.value = color
+}
+
+function selectMode(mode) {
+  segBtns.forEach(b => b.classList.remove('active'))
+  const match = [...segBtns].find(b => b.dataset.mode === mode)
+  if (match) match.classList.add('active')
 }
 
 function setKeyStatus(isSet) {
