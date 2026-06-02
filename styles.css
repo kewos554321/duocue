@@ -6,8 +6,6 @@
   z-index: 99999;
   background: rgba(0, 0, 0, 0.75);
   color: #ffffff;
-  font-size: 1.4rem;
-  font-family: Arial, sans-serif;
   padding: 6px 16px;
   border-radius: 4px;
   max-width: 80vw;
@@ -23,11 +21,9 @@
 
 .duocue-en {
   color: #ffffff;
-  font-size: 1.4rem;
 }
 
 .duocue-zh {
-  font-size: 1.2rem;
   margin-top: 4px;
   white-space: normal;
 }
