@@ -12,7 +12,11 @@ const transcriptStatsEl = document.getElementById('transcriptStats')
 const transcriptWarning = document.getElementById('transcriptWarning')
 const downloadBtn = document.getElementById('downloadBtn')
 const clearBtn = document.getElementById('clearBtn')
-const segBtns     = document.querySelectorAll('.seg-btn')
+const segBtns          = document.querySelectorAll('.seg-btn')
+const fontSizeRange    = document.getElementById('fontSizeRange')
+const fontSizeLabel    = document.getElementById('fontSizeLabel')
+const fontFamilySelect = document.getElementById('fontFamilySelect')
+const boldToggle       = document.getElementById('boldToggle')
 
 // ── Transcript helpers ────────────────────────────────────────────────────
 function updateTranscriptStats(lines, isFull) {
@@ -55,8 +59,8 @@ async function clearTranscript() {
 
 // ── Init ──────────────────────────────────────────────────────────────────
 chrome.storage.local.get(
-  ['translationApiKey', 'enabled', 'subtitleColor', 'displayMode', 'transcriptEnabled', 'transcriptLines', 'transcriptStorageFull'],
-  ({ translationApiKey, enabled, subtitleColor, displayMode, transcriptEnabled, transcriptLines = [], transcriptStorageFull }) => {
+  ['translationApiKey', 'enabled', 'subtitleColor', 'displayMode', 'transcriptEnabled', 'transcriptLines', 'transcriptStorageFull', 'fontSize', 'fontFamily', 'bold'],
+  ({ translationApiKey, enabled, subtitleColor, displayMode, transcriptEnabled, transcriptLines = [], transcriptStorageFull, fontSize, fontFamily, bold }) => {
     if (enabled !== false) {
       toggle.classList.add('on')
     }
@@ -70,6 +74,14 @@ chrome.storage.local.get(
 
     // Display Mode
     selectMode(displayMode || 'both')
+
+    const fs = fontSize ?? 18
+    fontSizeRange.value       = fs
+    fontSizeLabel.textContent = `${fs}pt`
+
+    fontFamilySelect.value = fontFamily || 'Arial, sans-serif'
+
+    if (bold === true) boldToggle.classList.add('on')
 
     if (transcriptEnabled === true) {
       transcriptToggle.classList.add('on')
@@ -118,6 +130,24 @@ segBtns.forEach(btn => {
     selectMode(mode)
     chrome.storage.local.set({ displayMode: mode })
   })
+})
+
+// ── Font size ─────────────────────────────────────────────────────────────
+fontSizeRange.addEventListener('input', () => {
+  const size = Number(fontSizeRange.value)
+  fontSizeLabel.textContent = `${size}pt`
+  chrome.storage.local.set({ fontSize: size })
+})
+
+// ── Font family ───────────────────────────────────────────────────────────
+fontFamilySelect.addEventListener('change', () => {
+  chrome.storage.local.set({ fontFamily: fontFamilySelect.value })
+})
+
+// ── Bold ──────────────────────────────────────────────────────────────────
+boldToggle.addEventListener('click', () => {
+  const isOn = boldToggle.classList.toggle('on')
+  chrome.storage.local.set({ bold: isOn })
 })
 
 // ── Eye button ────────────────────────────────────────────────────────────
