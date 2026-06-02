@@ -107,18 +107,15 @@ function startPolling(platform) {
   createOverlay()
   console.log(`[DuoCue] Polling subtitles for ${platform.name}`)
 
-  // Re-parent overlay when fullscreen state changes.
-  // Poll-based (not event-based) because some players don't fire fullscreenchange.
-  let lastFullscreenEl = null
+  // Keep overlay inside playerContainer so it survives fullscreen transitions.
+  // HBO Max fullscreens playerContainer, so the overlay must be its descendant.
   function syncOverlayParent() {
-    const fs = document.fullscreenElement || document.webkitFullscreenElement || null
-    if (fs === lastFullscreenEl) return
-    lastFullscreenEl = fs
     const overlay = document.getElementById('duocue-overlay')
-    if (overlay) (fs || document.body).appendChild(overlay)
+    if (!overlay) return
+    const player = document.querySelector('[data-testid="playerContainer"]')
+    const target = player || document.body
+    if (overlay.parentElement !== target) target.appendChild(overlay)
   }
-  document.addEventListener('fullscreenchange', syncOverlayParent)
-  document.addEventListener('webkitfullscreenchange', syncOverlayParent)
 
   let transcriptEnabled = false
   let transcriptStartTime = null
