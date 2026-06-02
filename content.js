@@ -111,6 +111,7 @@ function startPolling(platform) {
   let transcriptStartTime = null
   let transcriptBuffer = []
   let transcriptFull = false
+  let flushInProgress = false
 
   chrome.storage.local.get(['transcriptEnabled', 'transcriptStorageFull'], (result) => {
     transcriptEnabled = result.transcriptEnabled === true
@@ -128,24 +129,33 @@ function startPolling(platform) {
   }
 
   async function flushTranscriptBuffer() {
-    if (transcriptBuffer.length === 0) return
-    const toWrite = transcriptBuffer.splice(0)
-    const { transcriptLines = [] } = await chrome.storage.local.get('transcriptLines')
-    const updated = [...transcriptLines, ...toWrite]
-    await chrome.storage.local.set({ transcriptLines: updated })
-    const bytes = await chrome.storage.local.getBytesInUse('transcriptLines')
-    if (bytes > 9 * 1024 * 1024) {
+    if (transcriptBuffer.length === 0 || flushInProgress) return
+    flushInProgress = true
+    try {
+      const toWrite = transcriptBuffer.splice(0)
+      const { transcriptLines = [] } = await chrome.storage.local.get('transcriptLines')
+      const updated = [...transcriptLines, ...toWrite]
+      await chrome.storage.local.set({ transcriptLines: updated })
+      const bytes = await chrome.storage.local.getBytesInUse('transcriptLines')
+      if (bytes > 9 * 1024 * 1024) {
+        transcriptFull = true
+        await chrome.storage.local.set({ transcriptStorageFull: true })
+      }
+    } catch (e) {
       transcriptFull = true
-      await chrome.storage.local.set({ transcriptStorageFull: true })
+      chrome.storage.local.set({ transcriptStorageFull: true })
+    } finally {
+      flushInProgress = false
     }
   }
 
   function recordSubtitle(text) {
-    transcriptBuffer.push({ t: elapsed(), text })
-    if (transcriptBuffer.length >= 10) flushTranscriptBuffer()
+    transcriptBuffer.push({ t: elapsed(), text: text.replace(/\n/g, ' ') })
+    if (transcriptBuffer.length >= 3) flushTranscriptBuffer()
   }
 
-  chrome.storage.onChanged.addListener((changes) => {
+  chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName !== 'local') return
     if (changes.transcriptEnabled) {
       transcriptEnabled = changes.transcriptEnabled.newValue === true
       if (transcriptEnabled) {
@@ -159,6 +169,9 @@ function startPolling(platform) {
       transcriptStartTime = Date.now()
       transcriptBuffer = []
       transcriptFull = false
+    }
+    if (changes.transcriptFlushAt) {
+      flushTranscriptBuffer()
     }
   })
 
@@ -186,6 +199,7 @@ function startPolling(platform) {
 
     if (!english) {
       updateOverlay(null, null)
+      lastEnglish = null
       lastChinese = null
       return
     }
