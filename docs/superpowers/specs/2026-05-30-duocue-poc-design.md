@@ -89,6 +89,8 @@ HBO Max 使用 styled-components，class 格式為 `ComponentName-Fuse-Web-Play_
 - `z-index: 99999` 確保疊在播放器上方
 - 無字幕時 `display: none`
 
+**全螢幕行為：** 瀏覽器 Fullscreen API 只渲染進入全螢幕的 element 及其子元素。Overlay 預設掛在 `document.body`，進全螢幕時 HBO Max 的 video player element 會覆蓋它。解法：監聽 `fullscreenchange`，進全螢幕時將 overlay 移入 `document.fullscreenElement`，離開時移回 `document.body`。
+
 ---
 
 ## manifest.json 設定
