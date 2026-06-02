@@ -28,6 +28,14 @@ chrome.storage.local.get('subtitleColor', ({ subtitleColor: c }) => {
   if (c) subtitleColor = sanitizeColor(c)
 })
 
+let displayMode = 'both'
+chrome.storage.local.get('displayMode', ({ displayMode: m }) => {
+  if (m) displayMode = m
+})
+
+let lastEnglish = null
+let lastChinese = null
+
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName !== 'local') return
   if (changes.subtitleColor) {
@@ -35,6 +43,10 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
     document.querySelectorAll('.duocue-zh').forEach(el => {
       el.style.color = subtitleColor
     })
+  }
+  if (changes.displayMode) {
+    displayMode = changes.displayMode.newValue
+    if (lastEnglish) updateOverlay(lastEnglish, lastChinese)
   }
 })
 
@@ -46,10 +58,20 @@ function updateOverlay(english, chinese) {
     overlay.style.display = 'none'
     return
   }
-  const chineseHtml = chinese
-    ? `<div class="duocue-zh" style="color:${subtitleColor}">${chinese}</div>`
-    : ''
-  overlay.innerHTML = `<div class="duocue-en">${english}</div>${chineseHtml}`
+
+  const showEn = displayMode === 'both' || displayMode === 'original'
+  const showZh = (displayMode === 'both' || displayMode === 'translation') && chinese
+
+  const enHtml = showEn ? `<div class="duocue-en">${english}</div>` : ''
+  const zhHtml = showZh ? `<div class="duocue-zh" style="color:${subtitleColor}">${chinese}</div>` : ''
+
+  if (!enHtml && !zhHtml) {
+    overlay.innerHTML = ''
+    overlay.style.display = 'none'
+    return
+  }
+
+  overlay.innerHTML = enHtml + zhHtml
   overlay.style.display = 'block'
 }
 
@@ -89,7 +111,6 @@ function startPolling(platform) {
   let transcriptStartTime = null
   let transcriptBuffer = []
   let transcriptFull = false
-  let flushInProgress = false
 
   chrome.storage.local.get(['transcriptEnabled', 'transcriptStorageFull'], (result) => {
     transcriptEnabled = result.transcriptEnabled === true
@@ -107,34 +128,24 @@ function startPolling(platform) {
   }
 
   async function flushTranscriptBuffer() {
-    if (transcriptBuffer.length === 0 || flushInProgress) return
-    flushInProgress = true
-    try {
-      const toWrite = transcriptBuffer.splice(0)
-      const { transcriptLines = [] } = await chrome.storage.local.get('transcriptLines')
-      const updated = [...transcriptLines, ...toWrite]
-      await chrome.storage.local.set({ transcriptLines: updated })
-      const bytes = await chrome.storage.local.getBytesInUse('transcriptLines')
-      if (bytes > 9 * 1024 * 1024) {
-        transcriptFull = true
-        await chrome.storage.local.set({ transcriptStorageFull: true })
-      }
-    } catch (e) {
-      // handle quota exceeded — mark full so we stop attempting writes
+    if (transcriptBuffer.length === 0) return
+    const toWrite = transcriptBuffer.splice(0)
+    const { transcriptLines = [] } = await chrome.storage.local.get('transcriptLines')
+    const updated = [...transcriptLines, ...toWrite]
+    await chrome.storage.local.set({ transcriptLines: updated })
+    const bytes = await chrome.storage.local.getBytesInUse('transcriptLines')
+    if (bytes > 9 * 1024 * 1024) {
       transcriptFull = true
-      chrome.storage.local.set({ transcriptStorageFull: true })
-    } finally {
-      flushInProgress = false
+      await chrome.storage.local.set({ transcriptStorageFull: true })
     }
   }
 
   function recordSubtitle(text) {
-    transcriptBuffer.push({ t: elapsed(), text: text.replace(/\n/g, ' ') })
-    if (transcriptBuffer.length >= 3) flushTranscriptBuffer()
+    transcriptBuffer.push({ t: elapsed(), text })
+    if (transcriptBuffer.length >= 10) flushTranscriptBuffer()
   }
 
-  chrome.storage.onChanged.addListener((changes, areaName) => {
-    if (areaName !== 'local') return
+  chrome.storage.onChanged.addListener((changes) => {
     if (changes.transcriptEnabled) {
       transcriptEnabled = changes.transcriptEnabled.newValue === true
       if (transcriptEnabled) {
@@ -149,35 +160,33 @@ function startPolling(platform) {
       transcriptBuffer = []
       transcriptFull = false
     }
-    if (changes.transcriptFlushAt) {
-      flushTranscriptBuffer()
-    }
   })
 
   window.addEventListener('beforeunload', () => {
     flushTranscriptBuffer()
   })
 
-  let lastText = null
   let translateTimer = null
 
   setInterval(async () => {
     const { enabled } = await chrome.storage.local.get('enabled')
     if (enabled === false) {
       updateOverlay(null, null)
-      lastText = null
+      lastEnglish = null
+      lastChinese = null
       return
     }
 
     const english = extractText(platform)
 
-    if (english === lastText) return
-    lastText = english
+    if (english === lastEnglish) return
+    lastEnglish = english
 
     console.log(`[DuoCue] ${english || '(no subtitle)'}`)
 
     if (!english) {
       updateOverlay(null, null)
+      lastChinese = null
       return
     }
 
@@ -187,6 +196,7 @@ function startPolling(platform) {
     clearTimeout(translateTimer)
     translateTimer = setTimeout(async () => {
       const chinese = await translate(english)
+      lastChinese = chinese
       updateOverlay(english, chinese)
     }, 150)
   }, 200)
