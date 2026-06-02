@@ -34,15 +34,7 @@
     .title-text {
       font-size: 17px;
       font-weight: 600;
-    }
-    .header-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .subtitle-text {
-      color: #8E8E93;
-      font-size: 13px;
+      flex: 1;
     }
 
     /* ── Toggle ── */
@@ -69,6 +61,33 @@
       transition: transform 0.2s;
     }
     .toggle.on .toggle-knob { transform: translateX(18px); }
+
+    /* ── Segmented Control ── */
+    .seg-control {
+      background: #1C1C1E;
+      border-radius: 9px;
+      padding: 3px;
+      display: flex;
+      gap: 2px;
+    }
+    .seg-btn {
+      flex: 1;
+      border-radius: 7px;
+      padding: 6px 0;
+      text-align: center;
+      font-size: 12px;
+      font-family: inherit;
+      border: none;
+      cursor: pointer;
+      color: #8E8E93;
+      background: transparent;
+      transition: background 0.15s, color 0.15s;
+    }
+    .seg-btn.active {
+      background: #0A84FF;
+      color: #FFFFFF;
+      font-weight: 600;
+    }
 
     /* ── Divider ── */
     .divider { height: 1px; background: #3A3A3C; margin: 0 16px; }
@@ -247,15 +266,19 @@
 
   <!-- Header -->
   <div class="header">
+    <!-- Row 1: title + toggle -->
     <div class="header-title">
       <div class="status-dot"></div>
       <span class="title-text">DuoCue</span>
-    </div>
-    <div class="header-row">
-      <span class="subtitle-text">Bilingual Subtitles</span>
       <div class="toggle" id="toggle">
         <div class="toggle-knob"></div>
       </div>
+    </div>
+    <!-- Row 2: display mode segmented control -->
+    <div class="seg-control" id="segControl">
+      <button class="seg-btn active" data-mode="both">兩者</button>
+      <button class="seg-btn" data-mode="original">原文</button>
+      <button class="seg-btn" data-mode="translation">翻譯</button>
     </div>
   </div>
 
