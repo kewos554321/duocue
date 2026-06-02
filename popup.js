@@ -151,10 +151,13 @@ boldToggle.addEventListener('click', () => {
 })
 
 // ── Eye button ────────────────────────────────────────────────────────────
+const EYE_OPEN  = '<svg width="17" height="17" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 3.5C4.5 3.5 1.5 8 1.5 8C1.5 8 4.5 12.5 8 12.5C11.5 12.5 14.5 8 14.5 8C14.5 8 11.5 3.5 8 3.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.3"/></svg>'
+const EYE_SLASH = '<svg width="17" height="17" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 3.5C4.5 3.5 1.5 8 1.5 8C1.5 8 4.5 12.5 8 12.5C11.5 12.5 14.5 8 14.5 8C14.5 8 11.5 3.5 8 3.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.3"/><line x1="3" y1="3" x2="13" y2="13" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>'
+
 eyeBtn.addEventListener('click', () => {
   const isPassword = apiKeyInput.type === 'password'
   apiKeyInput.type = isPassword ? 'text' : 'password'
-  eyeBtn.textContent = isPassword ? '🙈' : '👁'
+  eyeBtn.innerHTML = isPassword ? EYE_SLASH : EYE_OPEN
 })
 
 // ── Save Key ──────────────────────────────────────────────────────────────
