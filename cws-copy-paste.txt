@@ -8,8 +8,7 @@ Bilingual subtitles for HBO Max — display original and translated subtitles si
 
 
 【Detailed description】
-DuoCue adds bilingual subtitles to your streaming experience on HBO Max, helping
-you learn a new language while watching your favorite shows and movies.
+DuoCue adds bilingual subtitles to your streaming experience, helping you learn a new language while watching your favorite shows and movies.
 
 Features:
 • Overlay original subtitles with your target language translation
@@ -17,10 +16,9 @@ Features:
 • Powered by Google Translate for real-time translation
 • Lightweight — no account required, works instantly
 
-Perfect for language learners who want to immerse themselves in content without
-losing comprehension.
+Perfect for language learners who want to immerse themselves in content without losing comprehension.
 
-Supported platforms: HBO Max (Max)
+Supported platforms: HBO Max (Max), Netflix, YouTube
 
 
 【Category】
