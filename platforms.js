@@ -21,9 +21,9 @@ const PLATFORMS = [
     id: 'youtube',
     name: 'YouTube',
     hostname: 'www.youtube.com',
-    textSelector: '.ytp-caption-segment',
+    textSelector: '.caption-window .ytp-caption-segment',
     textJoin: ' ',
     playerSelector: '#movie_player',
-    hideNativeSelector: '.ytp-caption-window-container',
+    hideNativeSelector: '.ytp-caption-window-container, .caption-window',
   },
 ]
