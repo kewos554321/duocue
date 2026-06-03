@@ -401,6 +401,21 @@
 
     .engine-info-desc { color: #636366; font-size: 11px; margin-top: 2px; }
 
+    /* ── Platform warning ── */
+    #platformWarning {
+      background: rgba(255, 159, 10, 0.12);
+      border-bottom: 1px solid rgba(255, 159, 10, 0.25);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #FF9F0A;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    #platformWarning.hidden { display: none; }
+    #sections.inactive { opacity: 0.4; pointer-events: none; }
+
     .engine-warning {
       font-size: 11px;
       color: #FF9F0A;
