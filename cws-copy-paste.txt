@@ -1,0 +1,58 @@
+========================================
+  DuoCue — Chrome Web Store 填寫素材
+  最後更新: v0.1.1 (2026-06-04)
+========================================
+
+【Short description (132字元內)】
+Bilingual subtitles for HBO Max — display original and translated subtitles side by side to boost your language learning.
+
+
+【Detailed description】
+DuoCue adds bilingual subtitles to your streaming experience on HBO Max, helping
+you learn a new language while watching your favorite shows and movies.
+
+Features:
+• Overlay original subtitles with your target language translation
+• Customize font size, font family, and bold styling
+• Powered by Google Translate for real-time translation
+• Lightweight — no account required, works instantly
+
+Perfect for language learners who want to immerse themselves in content without
+losing comprehension.
+
+Supported platforms: HBO Max (Max)
+
+
+【Category】
+Education
+
+
+【單一用途說明】
+DuoCue displays bilingual subtitles on streaming platforms (HBO Max) to help users learn languages while watching content. It overlays a translated subtitle line beneath the original, with customizable font settings.
+
+
+【storage 權限理由】
+Used to save user preferences locally on the device: subtitle color, font size, font family, bold setting, display mode, Google Translate API key, and transcript lines. No data leaves the device via this permission.
+
+
+【downloads 權限理由】
+Used solely to let users export their subtitle transcript as a .txt file via chrome.downloads.download(). This is triggered only when the user clicks the "Download" button in the popup.
+
+
+【網站存取權限理由 (translation.googleapis.com)】
+Required to send subtitle text to Google Cloud Translation API for real-time translation. The API key is provided by the user. No data is collected or stored by the extension from these requests.
+
+
+【遠端程式碼 (Remote code)】
+選 NO — 不需填理由
+
+
+【Privacy policy URL】
+https://kewos554321.github.io/duocue/privacy-policy.html
+
+
+【Distribution】
+Visibility: Public
+Pricing:    Free
+
+========================================
