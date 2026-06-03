@@ -1,9 +1,8 @@
-async function detectPlatform() {
-  const { selectedPlatform } = await chrome.storage.local.get('selectedPlatform')
-  if (selectedPlatform) {
-    return PLATFORMS.find(p => p.id === selectedPlatform) ?? null
-  }
-  return PLATFORMS.find(p => location.hostname === p.hostname) ?? null
+function detectPlatform() {
+  const platform = PLATFORMS.find(p => location.hostname === p.hostname)
+  if (!platform) return null
+  if (platform.watchMatcher && !platform.watchMatcher()) return null
+  return platform
 }
 
 function createOverlay() {
@@ -103,6 +102,19 @@ function updateOverlay(english, chinese) {
 
   overlay.innerHTML = enHtml + zhHtml
   overlay.style.display = 'block'
+}
+
+let _pollInterval = null
+
+function stopPolling() {
+  if (_pollInterval) {
+    clearInterval(_pollInterval)
+    _pollInterval = null
+  }
+  document.getElementById('duocue-overlay')?.remove()
+  document.getElementById('duocue-hide-native')?.remove()
+  lastEnglish = null
+  lastChinese = null
 }
 
 function injectHideNativeCSS(platform) {
@@ -248,7 +260,7 @@ function startPolling(platform) {
 
   let translateTimer = null
 
-  setInterval(async () => {
+  _pollInterval = setInterval(async () => {
     syncOverlayParent()
     const { enabled } = await chrome.storage.local.get('enabled')
     if (enabled === false) {
@@ -282,7 +294,22 @@ function startPolling(platform) {
   }, 200)
 }
 
-;(async () => {
-  const platform = await detectPlatform()
+let _currentUrl = ''
+
+function tryInit() {
+  if (location.href === _currentUrl) return
+  _currentUrl = location.href
+  stopPolling()
+  const platform = detectPlatform()
   if (platform) startPolling(platform)
-})()
+}
+
+const _origPush = history.pushState.bind(history)
+history.pushState = (...args) => { _origPush(...args); tryInit() }
+
+const _origReplace = history.replaceState.bind(history)
+history.replaceState = (...args) => { _origReplace(...args); tryInit() }
+
+window.addEventListener('popstate', tryInit)
+
+tryInit()
