@@ -305,6 +305,7 @@ async function tryInit() {
   _currentUrl = location.href
   stopPolling()
   const platform = await detectPlatform()
+  chrome.storage.local.set({ detectedPlatform: platform?.id ?? null })
   if (platform) startPolling(platform)
 }
 

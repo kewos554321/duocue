@@ -23,6 +23,8 @@ const fontFamilySelect = document.getElementById('fontFamilySelect')
 const boldToggle       = document.getElementById('boldToggle')
 
 // ── Summaries + accordion ─────────────────────────────────────────────────
+const PLATFORM_NAMES = { hbomax: 'HBO Max', netflix: 'Netflix', youtube: 'YouTube' }
+
 const COLOR_NAMES = {
   '#FFD700': '金色', '#FFFFFF': '白色', '#00E5FF': '青色',
   '#FF6B6B': '紅色', '#98FB98': '綠色',
@@ -111,10 +113,10 @@ async function clearTranscript() {
 chrome.storage.local.get(
   ['translationApiKey', 'enabled', 'subtitleColor', 'displayMode', 'transcriptEnabled',
    'transcriptLines', 'transcriptStorageFull', 'fontSize', 'fontFamily', 'bold',
-   'translationEngine', 'selectedPlatform'],
+   'translationEngine', 'selectedPlatform', 'detectedPlatform'],
   ({ translationApiKey, enabled, subtitleColor, displayMode, transcriptEnabled,
      transcriptLines = [], transcriptStorageFull, fontSize, fontFamily, bold,
-     translationEngine, selectedPlatform }) => {
+     translationEngine, selectedPlatform, detectedPlatform }) => {
 
     if (enabled !== false) toggle.classList.add('on')
 
@@ -137,7 +139,7 @@ chrome.storage.local.get(
     }
 
     selectEngine(translationEngine || 'free')
-    selectPlatform(selectedPlatform || 'auto')
+    selectPlatform(selectedPlatform || 'auto', detectedPlatform)
     initSections()
     updateSummaries()
   }
@@ -158,9 +160,14 @@ transcriptToggle.addEventListener('click', () => {
   updateSummaries()
 })
 
-// ── Live transcript stats ─────────────────────────────────────────────────
+// ── Live transcript stats + detected platform ─────────────────────────────
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName !== 'local') return
+  if (changes.detectedPlatform) {
+    chrome.storage.local.get('selectedPlatform', ({ selectedPlatform }) => {
+      updatePlatformSummary(selectedPlatform || 'auto', changes.detectedPlatform.newValue)
+    })
+  }
   if (changes.transcriptLines || changes.transcriptStorageFull) {
     chrome.storage.local.get(
       ['transcriptLines', 'transcriptStorageFull'],
@@ -201,11 +208,22 @@ engineBtns.forEach(btn => {
 })
 
 // ── Platform picker ───────────────────────────────────────────────────────
-function selectPlatform(id) {
+function updatePlatformSummary(selectedId, detectedId) {
+  const el = document.getElementById('summaryPlatform')
+  if (!selectedId || selectedId === 'auto') {
+    const name = PLATFORM_NAMES[detectedId]
+    el.textContent = name ? `自動（${name}）` : '自動（未偵測）'
+  } else {
+    el.textContent = PLATFORM_NAMES[selectedId] ?? selectedId
+  }
+}
+
+function selectPlatform(id, detectedId) {
   platformBtns.forEach(b => b.classList.toggle('active', b.dataset.platform === id))
-  const name = [...platformBtns].find(b => b.dataset.platform === id)?.textContent ?? '未選擇'
-  document.getElementById('summaryPlatform').textContent = name
   chrome.storage.local.set({ selectedPlatform: id })
+  chrome.storage.local.get('detectedPlatform', ({ detectedPlatform }) => {
+    updatePlatformSummary(id, detectedId ?? detectedPlatform)
+  })
 }
 
 platformBtns.forEach(btn => {
