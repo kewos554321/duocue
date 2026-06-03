@@ -4,7 +4,10 @@
   "version": "0.1.0",
   "description": "Bilingual subtitles for streaming platforms",
   "permissions": ["storage", "downloads"],
-  "host_permissions": ["https://translation.googleapis.com/*"],
+  "host_permissions": [
+    "https://translation.googleapis.com/*",
+    "https://api.mymemory.translated.net/*"
+  ],
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
