@@ -14,6 +14,7 @@ const downloadBtn = document.getElementById('downloadBtn')
 const clearBtn = document.getElementById('clearBtn')
 const segBtns          = document.querySelectorAll('#segControl .seg-btn')
 const engineBtns       = document.querySelectorAll('#enginePicker .seg-btn')
+const platformBtns     = document.querySelectorAll('#platformPicker .seg-btn')
 const freeInfo         = document.getElementById('freeInfo')
 const googleConfig     = document.getElementById('googleConfig')
 const fontSizeRange    = document.getElementById('fontSizeRange')
@@ -109,9 +110,11 @@ async function clearTranscript() {
 // ── Init ──────────────────────────────────────────────────────────────────
 chrome.storage.local.get(
   ['translationApiKey', 'enabled', 'subtitleColor', 'displayMode', 'transcriptEnabled',
-   'transcriptLines', 'transcriptStorageFull', 'fontSize', 'fontFamily', 'bold', 'translationEngine'],
+   'transcriptLines', 'transcriptStorageFull', 'fontSize', 'fontFamily', 'bold',
+   'translationEngine', 'selectedPlatform'],
   ({ translationApiKey, enabled, subtitleColor, displayMode, transcriptEnabled,
-     transcriptLines = [], transcriptStorageFull, fontSize, fontFamily, bold, translationEngine }) => {
+     transcriptLines = [], transcriptStorageFull, fontSize, fontFamily, bold,
+     translationEngine, selectedPlatform }) => {
 
     if (enabled !== false) toggle.classList.add('on')
 
@@ -134,6 +137,7 @@ chrome.storage.local.get(
     }
 
     selectEngine(translationEngine || 'free')
+    if (selectedPlatform) selectPlatform(selectedPlatform)
     initSections()
     updateSummaries()
   }
@@ -194,6 +198,18 @@ function selectEngine(engine) {
 
 engineBtns.forEach(btn => {
   btn.addEventListener('click', () => selectEngine(btn.dataset.engine))
+})
+
+// ── Platform picker ───────────────────────────────────────────────────────
+function selectPlatform(id) {
+  platformBtns.forEach(b => b.classList.toggle('active', b.dataset.platform === id))
+  const name = [...platformBtns].find(b => b.dataset.platform === id)?.textContent ?? '未選擇'
+  document.getElementById('summaryPlatform').textContent = name
+  chrome.storage.local.set({ selectedPlatform: id })
+}
+
+platformBtns.forEach(btn => {
+  btn.addEventListener('click', () => selectPlatform(btn.dataset.platform))
 })
 
 // ── Font size ─────────────────────────────────────────────────────────────
