@@ -324,13 +324,99 @@
       font-size: 10px;
       pointer-events: none;
     }
+
+    /* ── Sections (accordion) ── */
+    #sections {
+      padding: 10px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .section {
+      background: #2C2C2E;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 13px 14px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: #FFFFFF;
+      flex: 1;
+    }
+
+    .section-summary {
+      font-size: 12px;
+      color: #8E8E93;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 140px;
+      text-align: right;
+    }
+
+    .chevron {
+      flex-shrink: 0;
+      color: #8E8E93;
+      transition: transform 0.2s, color 0.2s;
+    }
+
+    .section-header.open .chevron {
+      transform: rotate(180deg);
+      color: #0A84FF;
+    }
+
+    .section-body {
+      border-top: 0.5px solid #3A3A3C;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* ── Engine info / warning ── */
+    .engine-info {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .engine-info-icon { color: #30D158; font-size: 14px; line-height: 1.4; }
+
+    .engine-info-title {
+      color: rgba(235,235,245,0.8);
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .engine-info-desc { color: #636366; font-size: 11px; margin-top: 2px; }
+
+    .engine-warning {
+      font-size: 11px;
+      color: #FF9F0A;
+      background: rgba(255,159,10,0.1);
+      border: 1px solid rgba(255,159,10,0.25);
+      border-radius: 10px;
+      padding: 10px 12px;
+      line-height: 1.6;
+      margin: 0;
+    }
   </style>
 </head>
 <body>
 
   <!-- Header -->
   <div class="header">
-    <!-- Row 1: title + toggle -->
     <div class="header-title">
       <div class="status-dot"></div>
       <span class="title-text">DuoCue</span>
@@ -338,106 +424,139 @@
         <div class="toggle-knob"></div>
       </div>
     </div>
-    <!-- Row 2: display mode segmented control -->
-    <div class="seg-control" id="segControl" role="group" aria-label="Display mode">
-      <button class="seg-btn active" data-mode="both">兩者</button>
-      <button class="seg-btn" data-mode="original">原文</button>
-      <button class="seg-btn" data-mode="translation">翻譯</button>
-    </div>
   </div>
 
-  <div class="divider"></div>
+  <div id="sections">
 
-  <!-- Body -->
-  <div class="body">
-
-    <!-- Color section -->
-    <div>
-      <span class="section-label">字幕顏色</span>
-      <div class="color-swatches">
-        <div class="color-swatch" data-color="#FFD700" style="background:#FFD700;--swatch-color:#FFD700"></div>
-        <div class="color-swatch" data-color="#FFFFFF" style="background:#FFFFFF;--swatch-color:#FFFFFF"></div>
-        <div class="color-swatch" data-color="#00E5FF" style="background:#00E5FF;--swatch-color:#00E5FF"></div>
-        <div class="color-swatch" data-color="#FF6B6B" style="background:#FF6B6B;--swatch-color:#FF6B6B"></div>
-        <div class="color-swatch" data-color="#98FB98" style="background:#98FB98;--swatch-color:#98FB98"></div>
-        <div class="color-swatch color-custom" id="customSwatch" style="--swatch-color:#FFFFFF"></div>
+    <!-- ① 字幕顯示 -->
+    <div class="section">
+      <div class="section-header" id="hdrDisplay" role="button" aria-expanded="false">
+        <span class="section-title">字幕顯示</span>
+        <span class="section-summary" id="summaryDisplay">兩者</span>
+        <svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
-      <input type="color" id="colorPicker" style="display:none">
-    </div>
-
-    <div class="divider"></div>
-
-    <!-- Font size -->
-    <div>
-      <div class="slider-row">
-        <span class="section-label" style="margin-bottom:0">字型大小</span>
-        <span class="slider-value" id="fontSizeLabel">18pt</span>
-      </div>
-      <input type="range" id="fontSizeRange" min="12" max="32" step="1" value="18">
-    </div>
-
-    <!-- Font family -->
-    <div>
-      <span class="section-label">字型</span>
-      <div class="select-wrap">
-        <select id="fontFamilySelect">
-          <option value="Arial, sans-serif">Arial, sans-serif（系統預設）</option>
-          <option value="Georgia, serif">Georgia, serif（有襯線）</option>
-          <option value='"Courier New", monospace'>Courier New, monospace（等寬）</option>
-          <option value='"Helvetica Neue", sans-serif'>Helvetica Neue</option>
-          <option value="Impact, sans-serif">Impact（粗黑體）</option>
-        </select>
+      <div class="section-body" id="bodyDisplay" style="display:none">
+        <div>
+          <span class="section-label">顯示模式</span>
+          <div class="seg-control" id="segControl" role="group" aria-label="Display mode">
+            <button class="seg-btn active" data-mode="both">兩者</button>
+            <button class="seg-btn" data-mode="original">原文</button>
+            <button class="seg-btn" data-mode="translation">翻譯</button>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Bold toggle -->
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <span class="section-label" style="margin-bottom:0">粗體</span>
-      <div class="toggle" id="boldToggle">
-        <div class="toggle-knob"></div>
+    <!-- ② 字幕外觀 -->
+    <div class="section">
+      <div class="section-header" id="hdrAppearance" role="button" aria-expanded="false">
+        <span class="section-title">字幕外觀</span>
+        <span class="section-summary" id="summaryAppearance">白 · 18pt · Arial</span>
+        <svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="section-body" id="bodyAppearance" style="display:none">
+        <div>
+          <span class="section-label">字幕顏色</span>
+          <div class="color-swatches">
+            <div class="color-swatch" data-color="#FFD700" style="background:#FFD700;--swatch-color:#FFD700"></div>
+            <div class="color-swatch" data-color="#FFFFFF" style="background:#FFFFFF;--swatch-color:#FFFFFF"></div>
+            <div class="color-swatch" data-color="#00E5FF" style="background:#00E5FF;--swatch-color:#00E5FF"></div>
+            <div class="color-swatch" data-color="#FF6B6B" style="background:#FF6B6B;--swatch-color:#FF6B6B"></div>
+            <div class="color-swatch" data-color="#98FB98" style="background:#98FB98;--swatch-color:#98FB98"></div>
+            <div class="color-swatch color-custom" id="customSwatch" style="--swatch-color:#FFFFFF"></div>
+          </div>
+          <input type="color" id="colorPicker" style="display:none">
+        </div>
+        <div>
+          <div class="slider-row">
+            <span class="section-label" style="margin-bottom:0">字型大小</span>
+            <span class="slider-value" id="fontSizeLabel">18pt</span>
+          </div>
+          <input type="range" id="fontSizeRange" min="12" max="32" step="1" value="18">
+        </div>
+        <div>
+          <span class="section-label">字型</span>
+          <div class="select-wrap">
+            <select id="fontFamilySelect">
+              <option value="Arial, sans-serif">Arial, sans-serif（系統預設）</option>
+              <option value="Georgia, serif">Georgia, serif（有襯線）</option>
+              <option value='"Courier New", monospace'>Courier New, monospace（等寬）</option>
+              <option value='"Helvetica Neue", sans-serif'>Helvetica Neue</option>
+              <option value="Impact, sans-serif">Impact（粗黑體）</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span class="section-label" style="margin-bottom:0">粗體</span>
+          <div class="toggle" id="boldToggle"><div class="toggle-knob"></div></div>
+        </div>
       </div>
     </div>
 
-    <div class="divider"></div>
-
-    <!-- API Key section -->
-    <div>
-      <div class="field-header">
-        <span class="field-label">API Key</span>
-        <span class="field-status" id="keyStatus"></span>
+    <!-- ③ 翻譯引擎 -->
+    <div class="section">
+      <div class="section-header" id="hdrEngine" role="button" aria-expanded="false">
+        <span class="section-title">翻譯引擎</span>
+        <span class="section-summary" id="summaryEngine">免費</span>
+        <svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
-      <div class="input-wrap">
-        <input type="password" id="apiKey" placeholder="AIza...">
-        <span class="eye-btn" id="eyeBtn"><svg width="17" height="17" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 3.5C4.5 3.5 1.5 8 1.5 8C1.5 8 4.5 12.5 8 12.5C11.5 12.5 14.5 8 14.5 8C14.5 8 11.5 3.5 8 3.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.3"/></svg></span>
+      <div class="section-body" id="bodyEngine" style="display:none">
+        <div class="seg-control" id="enginePicker" role="group" aria-label="Translation engine">
+          <button class="seg-btn active" data-engine="free">免費</button>
+          <button class="seg-btn" data-engine="google">Google Translate</button>
+        </div>
+        <div id="freeInfo" class="engine-info">
+          <span class="engine-info-icon">✓</span>
+          <div>
+            <div class="engine-info-title">MyMemory 免費翻譯</div>
+            <div class="engine-info-desc">每天 1,000 字，無需帳號</div>
+          </div>
+        </div>
+        <div id="googleConfig" style="display:none;flex-direction:column;gap:12px;">
+          <div>
+            <div class="field-header">
+              <span class="field-label">API Key</span>
+              <span class="field-status" id="keyStatus"></span>
+            </div>
+            <div class="input-wrap">
+              <input type="password" id="apiKey" placeholder="AIza...">
+              <span class="eye-btn" id="eyeBtn"><svg width="17" height="17" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 3.5C4.5 3.5 1.5 8 1.5 8C1.5 8 4.5 12.5 8 12.5C11.5 12.5 14.5 8 14.5 8C14.5 8 11.5 3.5 8 3.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.3"/></svg></span>
+            </div>
+          </div>
+          <button id="save">Save Key</button>
+          <p class="engine-warning">需要 Google Cloud API Key。每月 500,000 字元免費，超過 $20/1M 字元。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ④ 逐字稿 -->
+    <div class="section">
+      <div class="section-header" id="hdrTranscript" role="button" aria-expanded="false">
+        <span class="section-title">逐字稿</span>
+        <span class="section-summary" id="summaryTranscript">關閉</span>
+        <svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="section-body" id="bodyTranscript" style="display:none">
+        <div class="field-header">
+          <span class="field-label">記錄字幕</span>
+          <div class="toggle" id="transcriptToggle"><div class="toggle-knob"></div></div>
+        </div>
+        <div class="transcript-body hidden" id="transcriptBody">
+          <div class="transcript-stats">
+            <span class="recording-dot"></span>
+            <span id="transcriptStats">0 lines · 0 KB</span>
+          </div>
+          <div class="transcript-warning hidden" id="transcriptWarning">
+            ⚠ Storage 接近上限，請下載並清除
+          </div>
+          <div class="transcript-actions">
+            <button class="action-btn download-btn" id="downloadBtn">Download .txt</button>
+            <button class="action-btn clear-btn" id="clearBtn">Clear</button>
+          </div>
+        </div>
       </div>
     </div>
 
-    <button id="save">Save Key</button>
-
-  </div>
-
-  <div class="divider"></div>
-
-  <div class="body">
-    <div class="field-header">
-      <span class="field-label">Transcript</span>
-      <div class="toggle" id="transcriptToggle">
-        <div class="toggle-knob"></div>
-      </div>
-    </div>
-    <div class="transcript-body hidden" id="transcriptBody">
-      <div class="transcript-stats">
-        <span class="recording-dot"></span>
-        <span id="transcriptStats">0 lines · 0 KB</span>
-      </div>
-      <div class="transcript-warning hidden" id="transcriptWarning">
-        ⚠ Storage 接近上限，請下載並清除
-      </div>
-      <div class="transcript-actions">
-        <button class="action-btn download-btn" id="downloadBtn">Download .txt</button>
-        <button class="action-btn clear-btn" id="clearBtn">Clear</button>
-      </div>
-    </div>
   </div>
 
   <script src="popup.js"></script>
