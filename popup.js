@@ -137,7 +137,7 @@ chrome.storage.local.get(
     }
 
     selectEngine(translationEngine || 'free')
-    if (selectedPlatform) selectPlatform(selectedPlatform)
+    selectPlatform(selectedPlatform || 'auto')
     initSections()
     updateSummaries()
   }

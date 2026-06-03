@@ -1,4 +1,8 @@
-function detectPlatform() {
+async function detectPlatform() {
+  const { selectedPlatform } = await chrome.storage.local.get('selectedPlatform')
+  if (selectedPlatform && selectedPlatform !== 'auto') {
+    return PLATFORMS.find(p => p.id === selectedPlatform) ?? null
+  }
   const platform = PLATFORMS.find(p => location.hostname === p.hostname)
   if (!platform) return null
   if (platform.watchMatcher && !platform.watchMatcher()) return null
@@ -296,11 +300,11 @@ function startPolling(platform) {
 
 let _currentUrl = ''
 
-function tryInit() {
+async function tryInit() {
   if (location.href === _currentUrl) return
   _currentUrl = location.href
   stopPolling()
-  const platform = detectPlatform()
+  const platform = await detectPlatform()
   if (platform) startPolling(platform)
 }
 
