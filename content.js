@@ -25,6 +25,7 @@ let subtitleColor = '#FFD700'
 let fontSize   = 18
 let fontFamily = 'Arial, sans-serif'
 let bold       = false
+let translationEngine = 'free'
 
 function sanitizeColor(c) {
   return /^#[0-9A-Fa-f]{3,8}$|^[a-zA-Z]+$/.test(c) ? c : '#FFD700'
@@ -38,6 +39,10 @@ chrome.storage.local.get(['fontSize', 'fontFamily', 'bold'], ({ fontSize: fs, fo
   if (fs != null) fontSize   = fs
   if (ff != null) fontFamily = ff
   if (b  != null) bold       = b
+})
+
+chrome.storage.local.get('translationEngine', ({ translationEngine: e }) => {
+  if (e) translationEngine = e
 })
 
 let displayMode = 'both'
@@ -75,6 +80,9 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
     const el = document.getElementById('duocue-overlay')
     if (el) el.style.fontWeight = bold ? 'bold' : 'normal'
   }
+  if (changes.translationEngine) {
+    translationEngine = changes.translationEngine.newValue
+  }
 })
 
 function updateOverlay(english, chinese) {
@@ -110,10 +118,22 @@ function extractText(platform) {
     .join('\n')
 }
 
-async function translate(text) {
+async function translateFree(text) {
+  try {
+    const res = await fetch(
+      `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|zh-TW`
+    )
+    const data = await res.json()
+    if (data.responseStatus !== 200) return null
+    return data.responseData?.translatedText ?? null
+  } catch {
+    return null
+  }
+}
+
+async function translateGoogle(text) {
   const { translationApiKey } = await chrome.storage.local.get('translationApiKey')
   if (!translationApiKey) return null
-
   try {
     const res = await fetch(
       `https://translation.googleapis.com/language/translate/v2?key=${translationApiKey}`,
@@ -128,6 +148,12 @@ async function translate(text) {
   } catch {
     return null
   }
+}
+
+async function translate(text) {
+  return translationEngine === 'google'
+    ? translateGoogle(text)
+    : translateFree(text)
 }
 
 function startPolling(platform) {
