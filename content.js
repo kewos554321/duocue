@@ -1,13 +1,8 @@
-const PLATFORMS = [
-  {
-    name: 'HBO Max',
-    hostname: 'play.hbomax.com',
-    containerSelector: '[class*="VerticalCueSpacer-Fuse-Web-Play"]',
-    textSelector: '[class*="TextCue-Fuse-Web-Play"]',
-  },
-]
-
-function detectPlatform() {
+async function detectPlatform() {
+  const { selectedPlatform } = await chrome.storage.local.get('selectedPlatform')
+  if (selectedPlatform) {
+    return PLATFORMS.find(p => p.id === selectedPlatform) ?? null
+  }
   return PLATFORMS.find(p => location.hostname === p.hostname) ?? null
 }
 
@@ -110,12 +105,21 @@ function updateOverlay(english, chinese) {
   overlay.style.display = 'block'
 }
 
+function injectHideNativeCSS(platform) {
+  const id = 'duocue-hide-native'
+  if (document.getElementById(id)) return
+  const style = document.createElement('style')
+  style.id = id
+  style.textContent = `${platform.hideNativeSelector} { display: none !important; }`
+  document.head.appendChild(style)
+}
+
 function extractText(platform) {
   const nodes = document.querySelectorAll(platform.textSelector)
   return Array.from(nodes)
     .map(n => n.textContent.trim())
     .filter(Boolean)
-    .join('\n')
+    .join(platform.textJoin ?? '\n')
 }
 
 async function translateFree(text) {
@@ -158,13 +162,14 @@ async function translate(text) {
 
 function startPolling(platform) {
   createOverlay()
+  injectHideNativeCSS(platform)
 
-  // Keep overlay inside playerContainer so it survives fullscreen transitions.
-  // HBO Max fullscreens playerContainer, so the overlay must be its descendant.
   function syncOverlayParent() {
     const overlay = document.getElementById('duocue-overlay')
     if (!overlay) return
-    const player = document.querySelector('[data-testid="playerContainer"]')
+    const player = platform.playerSelector
+      ? document.querySelector(platform.playerSelector)
+      : null
     const target = player || document.body
     if (overlay.parentElement !== target) target.appendChild(overlay)
   }
@@ -277,5 +282,7 @@ function startPolling(platform) {
   }, 200)
 }
 
-const platform = detectPlatform()
-if (platform) startPolling(platform)
+;(async () => {
+  const platform = await detectPlatform()
+  if (platform) startPolling(platform)
+})()
