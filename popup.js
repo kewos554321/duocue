@@ -12,11 +12,60 @@ const transcriptStatsEl = document.getElementById('transcriptStats')
 const transcriptWarning = document.getElementById('transcriptWarning')
 const downloadBtn = document.getElementById('downloadBtn')
 const clearBtn = document.getElementById('clearBtn')
-const segBtns          = document.querySelectorAll('.seg-btn')
+const segBtns          = document.querySelectorAll('#segControl .seg-btn')
+const engineBtns       = document.querySelectorAll('#enginePicker .seg-btn')
+const freeInfo         = document.getElementById('freeInfo')
+const googleConfig     = document.getElementById('googleConfig')
 const fontSizeRange    = document.getElementById('fontSizeRange')
 const fontSizeLabel    = document.getElementById('fontSizeLabel')
 const fontFamilySelect = document.getElementById('fontFamilySelect')
 const boldToggle       = document.getElementById('boldToggle')
+
+// ── Summaries + accordion ─────────────────────────────────────────────────
+const COLOR_NAMES = {
+  '#FFD700': '金色', '#FFFFFF': '白色', '#00E5FF': '青色',
+  '#FF6B6B': '紅色', '#98FB98': '綠色',
+}
+
+function colorName(hex) {
+  if (!hex) return '自訂'
+  return COLOR_NAMES[hex.toUpperCase()] || '自訂'
+}
+
+function fontAbbr(ff) {
+  return (ff || 'Arial').split(',')[0].replace(/['"]/g, '').trim()
+}
+
+function updateSummaries() {
+  const activeMode = [...segBtns].find(b => b.classList.contains('active'))
+  document.getElementById('summaryDisplay').textContent = activeMode?.textContent ?? '兩者'
+
+  const selSwatch = [...swatches].find(s => s.classList.contains('selected'))
+  const isCustom  = customSwatch.classList.contains('selected')
+  const cName     = isCustom ? '自訂' : colorName(selSwatch?.dataset.color || '')
+  const size      = fontSizeRange.value
+  const font      = fontAbbr(fontFamilySelect.value)
+  document.getElementById('summaryAppearance').textContent = `${cName} · ${size}pt · ${font}`
+
+  const activeEngine = [...engineBtns].find(b => b.classList.contains('active'))
+  document.getElementById('summaryEngine').textContent =
+    activeEngine?.dataset.engine === 'google' ? 'Google Translate' : '免費'
+
+  document.getElementById('summaryTranscript').textContent =
+    transcriptToggle.classList.contains('on') ? '記錄中' : '關閉'
+}
+
+function initSections() {
+  document.querySelectorAll('.section-header').forEach(header => {
+    const body = header.nextElementSibling
+    header.addEventListener('click', () => {
+      const isOpen = header.classList.contains('open')
+      header.classList.toggle('open', !isOpen)
+      header.setAttribute('aria-expanded', String(!isOpen))
+      body.style.display = isOpen ? 'none' : ''
+    })
+  })
+}
 
 // ── Transcript helpers ────────────────────────────────────────────────────
 function updateTranscriptStats(lines, isFull) {
@@ -59,28 +108,23 @@ async function clearTranscript() {
 
 // ── Init ──────────────────────────────────────────────────────────────────
 chrome.storage.local.get(
-  ['translationApiKey', 'enabled', 'subtitleColor', 'displayMode', 'transcriptEnabled', 'transcriptLines', 'transcriptStorageFull', 'fontSize', 'fontFamily', 'bold'],
-  ({ translationApiKey, enabled, subtitleColor, displayMode, transcriptEnabled, transcriptLines = [], transcriptStorageFull, fontSize, fontFamily, bold }) => {
-    if (enabled !== false) {
-      toggle.classList.add('on')
-    }
+  ['translationApiKey', 'enabled', 'subtitleColor', 'displayMode', 'transcriptEnabled',
+   'transcriptLines', 'transcriptStorageFull', 'fontSize', 'fontFamily', 'bold', 'translationEngine'],
+  ({ translationApiKey, enabled, subtitleColor, displayMode, transcriptEnabled,
+     transcriptLines = [], transcriptStorageFull, fontSize, fontFamily, bold, translationEngine }) => {
 
-    if (translationApiKey) {
-      apiKeyInput.value = translationApiKey
-    }
+    if (enabled !== false) toggle.classList.add('on')
+
+    if (translationApiKey) apiKeyInput.value = translationApiKey
     setKeyStatus(!!translationApiKey)
 
     selectColor(subtitleColor || '#FFD700')
-
-    // Display Mode
     selectMode(displayMode || 'both')
 
     const fs = fontSize ?? 18
     fontSizeRange.value       = fs
     fontSizeLabel.textContent = `${fs}pt`
-
-    fontFamilySelect.value = fontFamily || 'Arial, sans-serif'
-
+    fontFamilySelect.value    = fontFamily || 'Arial, sans-serif'
     if (bold === true) boldToggle.classList.add('on')
 
     if (transcriptEnabled === true) {
@@ -88,6 +132,10 @@ chrome.storage.local.get(
       transcriptBody.classList.remove('hidden')
       updateTranscriptStats(transcriptLines, transcriptStorageFull === true)
     }
+
+    selectEngine(translationEngine || 'free')
+    initSections()
+    updateSummaries()
   }
 )
 
@@ -95,6 +143,7 @@ chrome.storage.local.get(
 toggle.addEventListener('click', () => {
   const isOn = toggle.classList.toggle('on')
   chrome.storage.local.set({ enabled: isOn })
+  updateSummaries()
 })
 
 // ── Transcript toggle ─────────────────────────────────────────────────────
@@ -102,6 +151,7 @@ transcriptToggle.addEventListener('click', () => {
   const isOn = transcriptToggle.classList.toggle('on')
   transcriptBody.classList.toggle('hidden', !isOn)
   chrome.storage.local.set({ transcriptEnabled: isOn })
+  updateSummaries()
 })
 
 // ── Live transcript stats ─────────────────────────────────────────────────
@@ -129,7 +179,21 @@ segBtns.forEach(btn => {
     const mode = btn.dataset.mode
     selectMode(mode)
     chrome.storage.local.set({ displayMode: mode })
+    updateSummaries()
   })
+})
+
+// ── Engine picker ──────────────────────────────────────────────────────────
+function selectEngine(engine) {
+  engineBtns.forEach(b => b.classList.toggle('active', b.dataset.engine === engine))
+  freeInfo.style.display     = engine === 'free'   ? ''     : 'none'
+  googleConfig.style.display = engine === 'google' ? 'flex' : 'none'
+  chrome.storage.local.set({ translationEngine: engine })
+  updateSummaries()
+}
+
+engineBtns.forEach(btn => {
+  btn.addEventListener('click', () => selectEngine(btn.dataset.engine))
 })
 
 // ── Font size ─────────────────────────────────────────────────────────────
@@ -137,17 +201,20 @@ fontSizeRange.addEventListener('input', () => {
   const size = Number(fontSizeRange.value)
   fontSizeLabel.textContent = `${size}pt`
   chrome.storage.local.set({ fontSize: size })
+  updateSummaries()
 })
 
 // ── Font family ───────────────────────────────────────────────────────────
 fontFamilySelect.addEventListener('change', () => {
   chrome.storage.local.set({ fontFamily: fontFamilySelect.value })
+  updateSummaries()
 })
 
 // ── Bold ──────────────────────────────────────────────────────────────────
 boldToggle.addEventListener('click', () => {
   const isOn = boldToggle.classList.toggle('on')
   chrome.storage.local.set({ bold: isOn })
+  updateSummaries()
 })
 
 // ── Eye button ────────────────────────────────────────────────────────────
@@ -183,6 +250,7 @@ swatches.forEach(swatch => {
     const color = swatch.dataset.color
     selectColor(color)
     chrome.storage.local.set({ subtitleColor: color })
+    updateSummaries()
   })
 })
 
@@ -192,6 +260,7 @@ colorPicker.addEventListener('input', () => {
   const color = colorPicker.value
   selectColor(color, true)
   chrome.storage.local.set({ subtitleColor: color })
+  updateSummaries()
 })
 
 // ── Helpers ───────────────────────────────────────────────────────────────
