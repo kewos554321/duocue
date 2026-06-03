@@ -1,52 +1,52 @@
 # DuoCue — 多平台支援 + 模組化設計文件
 
 **日期：** 2026-06-03
+**修訂：** 2026-06-03（更新為實際實現）
 **階段：** 功能擴充
-**目標：** 新增 Netflix 和 YouTube 支援，並將平台設定從 `content.js` 拆分至獨立的 `platforms.js`，讓新增平台不需碰 content.js 邏輯
+**目標：** 新增 Netflix 和 YouTube 支援，將平台設定模組化，並在 popup 提供手動平台選擇器
 
 ---
 
 ## 背景
 
-目前 `content.js` 直接內嵌 `PLATFORMS` 陣列，且 `syncOverlayParent` 硬編碼 HBO Max 的 `[data-testid="playerContainer"]`，`styles.css` 也硬編碼 HBO Max 的 native subtitle CSS。新增平台需要修改多個地方，風險高。
+原 `content.js` 直接內嵌 `PLATFORMS` 陣列、硬編碼 HBO Max 的 playerSelector 和 native subtitle CSS。本次將平台設定拆分至 `platforms.js`，新增平台只需修改該檔案和 `manifest.json`。
 
-本次重構：
-1. 將 `PLATFORMS` 抽出到新的 `platforms.js`（全域載入，`content.js` 直接使用）
-2. 每個平台 config 包含所有平台特定資訊
-3. `content.js` 動態注入 `hideNativeSelector` CSS，不再依賴 `styles.css` 硬編碼
-4. 新增 Netflix 和 YouTube 平台
+Popup 新增手動平台選擇器，讓用戶明確指定當前平台；`content.js` 優先讀取 storage 選擇，fallback 到 hostname 自動偵測。
 
 ---
 
 ## 成功標準
 
-1. HBO Max 行為與目前完全一致（無回歸）
-2. Netflix：播放含英文字幕的影片，DuoCue overlay 顯示英文 + 中文翻譯
-3. YouTube：播放含英文字幕的影片，DuoCue overlay 顯示英文 + 中文翻譯
-4. 新增平台只需在 `platforms.js` 加一個物件 + 更新 `manifest.json`，不需動 `content.js`
+1. HBO Max 行為與之前完全一致（無回歸）
+2. Netflix：播放含英文字幕的影片，DuoCue overlay 顯示英文 + 中文翻譯，原生字幕隱藏
+3. YouTube：播放含英文字幕的影片，DuoCue overlay 顯示英文 + 中文翻譯，原生字幕隱藏
+4. 新增平台只需在 `platforms.js` 加一個物件 + 更新 `manifest.json`
+5. Popup 手動選擇平台後重新整理頁面即生效
 
 ---
 
 ## 平台設定
 
-### Platform Config 結構
+### Platform Config 結構（`platforms.js`）
 
 ```js
 {
-  name: string,              // 顯示名稱
-  hostname: string,          // location.hostname 匹配值
-  textSelector: string,      // 字幕文字元素 selector
-  textJoin: string,          // 多元素時的連接字元（'\n' 或 ' '）
+  id: string,                // storage key 識別用（'hbomax'|'netflix'|'youtube'）
+  name: string,              // popup 顯示名稱
+  hostname: string,          // hostname 自動偵測 fallback
+  textSelector: string,      // 字幕文字元素 selector（DOM 實測確認）
+  textJoin: string,          // 多元素連接字元（'\n' 或 ' '）
   playerSelector: string,    // 播放器容器 selector（全螢幕用）
   hideNativeSelector: string, // 要隱藏的原生字幕 selector
 }
 ```
 
-### 三個平台的完整設定
+### 三個平台完整設定（DOM 實測確認）
 
 ```js
 const PLATFORMS = [
   {
+    id: 'hbomax',
     name: 'HBO Max',
     hostname: 'play.hbomax.com',
     textSelector: '[class*="TextCue-Fuse-Web-Play"]',
@@ -55,17 +55,19 @@ const PLATFORMS = [
     hideNativeSelector: '[class*="CaptionWindow-Fuse-Web-Play"]',
   },
   {
+    id: 'netflix',
     name: 'Netflix',
     hostname: 'www.netflix.com',
-    textSelector: '.player-timedtext-text-container',
+    textSelector: '.player-timedtext-text-container',  // 實測確認
     textJoin: '\n',
-    playerSelector: '.watch-video--player-view',
+    playerSelector: '.watch-video--player-view',        // 實測確認
     hideNativeSelector: '.player-timedtext',
   },
   {
+    id: 'youtube',
     name: 'YouTube',
     hostname: 'www.youtube.com',
-    textSelector: '.ytp-caption-segment',
+    textSelector: '.ytp-caption-segment',               // 實測確認
     textJoin: ' ',
     playerSelector: '#movie_player',
     hideNativeSelector: '.ytp-caption-window-container',
@@ -79,21 +81,32 @@ const PLATFORMS = [
 
 ---
 
-## 實作範圍
+## 架構
 
-### 新增：`platforms.js`
+### `platforms.js`（新增）
 
-- 定義 `PLATFORMS` 陣列（全域變數，供 `content.js` 直接取用）
-- 包含上方三個平台的完整設定
+全域變數 `PLATFORMS`，在 `content.js` 之前載入（manifest `js` 陣列順序保證）。
 
-### 修改：`content.js`
+### `content.js` 變更
 
-1. **移除** `PLATFORMS` 陣列（改用 `platforms.js` 的全域）
-2. **`extractText`**：改用 `platform.textJoin` 取代硬編碼的 `'\n'`
-3. **`syncOverlayParent`**：改用 `platform.playerSelector` 取代硬編碼的 `[data-testid="playerContainer"]`
-4. **新增 `injectHideNativeCSS(platform)`**：在 `startPolling` 時動態注入 `<style>` 隱藏原生字幕
+| 項目 | 變更 |
+|------|------|
+| `PLATFORMS` 陣列 | 移除，改用 `platforms.js` 全域 |
+| `detectPlatform()` | 改為 async，優先讀 storage `selectedPlatform`，fallback hostname |
+| `extractText()` | 使用 `platform.textJoin` 取代硬編碼 `'\n'` |
+| `syncOverlayParent()` | 使用 `platform.playerSelector` 取代硬編碼 selector |
+| `injectHideNativeCSS()` | 新增，startPolling 時動態注入 `<style>` |
+| 底部呼叫 | 改為 async IIFE `(async () => { ... })()` |
 
 ```js
+async function detectPlatform() {
+  const { selectedPlatform } = await chrome.storage.local.get('selectedPlatform')
+  if (selectedPlatform) {
+    return PLATFORMS.find(p => p.id === selectedPlatform) ?? null
+  }
+  return PLATFORMS.find(p => location.hostname === p.hostname) ?? null
+}
+
 function injectHideNativeCSS(platform) {
   const id = 'duocue-hide-native'
   if (document.getElementById(id)) return
@@ -104,15 +117,11 @@ function injectHideNativeCSS(platform) {
 }
 ```
 
-### 修改：`styles.css`
+### `styles.css` 變更
 
-- 移除 `[class*="CaptionWindow-Fuse-Web-Play"] { display: none !important; }`（改由 `content.js` 動態注入）
+移除 `[class*="CaptionWindow-Fuse-Web-Play"] { display: none !important; }`，改由 `injectHideNativeCSS()` 動態注入。
 
-### 修改：`manifest.json`
-
-- `js` 陣列改為 `["platforms.js", "content.js"]`（platforms.js 必須在 content.js 之前載入）
-- `matches` 新增 Netflix 和 YouTube 的 URL pattern
-- `host_permissions` 新增 Netflix 和 YouTube（content script 不需要，但保持一致）
+### `manifest.json` 變更
 
 ```json
 "content_scripts": [
@@ -129,10 +138,18 @@ function injectHideNativeCSS(platform) {
 ]
 ```
 
+### Popup 變更
+
+新增「平台」accordion 分類（第一個 section），包含三個按鈕：HBO Max / Netflix / YouTube。
+
+Storage key：`selectedPlatform: 'hbomax' | 'netflix' | 'youtube'`
+
+切換平台後須重新整理頁面（content script 只在頁面載入時執行）。
+
 ---
 
-## 不在本次範圍
+## 已知限制
 
-- Disney+、Prime Video、Apple TV+（日後用相同模式新增）
-- YouTube 自動語言偵測（目前固定偵測英文字幕）
-- SPA 頁面切換後重新初始化（YouTube 切換影片時）
+- **SPA 導航**：Netflix、YouTube 皆為 SPA，從首頁點進影片不會觸發 content script，需直接在 watch URL 開新頁或重新整理
+- **SPA 影片切換**：YouTube 切換影片時不重新初始化（留待後續）
+- **Disney+、Prime Video、Apple TV+**：日後用相同模式新增，只需在 `platforms.js` 加一個物件
