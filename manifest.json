@@ -24,8 +24,12 @@
   },
   "content_scripts": [
     {
-      "matches": ["*://play.hbomax.com/*"],
-      "js": ["content.js"],
+      "matches": [
+        "*://play.hbomax.com/*",
+        "*://www.netflix.com/watch/*",
+        "*://www.youtube.com/*"
+      ],
+      "js": ["platforms.js", "content.js"],
       "css": ["styles.css"],
       "run_at": "document_idle"
     }
