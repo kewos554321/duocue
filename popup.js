@@ -19,6 +19,8 @@ const freeInfo         = document.getElementById('freeInfo')
 const googleConfig     = document.getElementById('googleConfig')
 const fontSizeRange    = document.getElementById('fontSizeRange')
 const fontSizeLabel    = document.getElementById('fontSizeLabel')
+const bgOpacityRange   = document.getElementById('bgOpacityRange')
+const bgOpacityLabel   = document.getElementById('bgOpacityLabel')
 const fontFamilySelect = document.getElementById('fontFamilySelect')
 const boldToggle       = document.getElementById('boldToggle')
 
@@ -48,7 +50,8 @@ function updateSummaries() {
   const cName     = isCustom ? '自訂' : colorName(selSwatch?.dataset.color || '')
   const size      = fontSizeRange.value
   const font      = fontAbbr(fontFamilySelect.value)
-  document.getElementById('summaryAppearance').textContent = `${cName} · ${size}pt · ${font}`
+  const op = bgOpacityRange.value
+  document.getElementById('summaryAppearance').textContent = `${cName} · ${size}pt · ${font} · ${op}%`
 
   const activeEngine = [...engineBtns].find(b => b.classList.contains('active'))
   document.getElementById('summaryEngine').textContent =
@@ -113,10 +116,10 @@ async function clearTranscript() {
 chrome.storage.local.get(
   ['translationApiKey', 'enabled', 'subtitleColor', 'displayMode', 'transcriptEnabled',
    'transcriptLines', 'transcriptStorageFull', 'fontSize', 'fontFamily', 'bold',
-   'translationEngine', 'selectedPlatform', 'detectedPlatform'],
+   'translationEngine', 'selectedPlatform', 'detectedPlatform', 'bgOpacity'],
   ({ translationApiKey, enabled, subtitleColor, displayMode, transcriptEnabled,
      transcriptLines = [], transcriptStorageFull, fontSize, fontFamily, bold,
-     translationEngine, selectedPlatform, detectedPlatform }) => {
+     translationEngine, selectedPlatform, detectedPlatform, bgOpacity: savedOp }) => {
 
     if (enabled !== false) toggle.classList.add('on')
 
@@ -131,6 +134,10 @@ chrome.storage.local.get(
     fontSizeLabel.textContent = `${fs}pt`
     fontFamilySelect.value    = fontFamily || 'Arial, sans-serif'
     if (bold === true) boldToggle.classList.add('on')
+
+    const op = savedOp ?? 75
+    bgOpacityRange.value       = op
+    bgOpacityLabel.textContent = `${op}%`
 
     if (transcriptEnabled === true) {
       transcriptToggle.classList.add('on')
@@ -241,6 +248,14 @@ fontSizeRange.addEventListener('input', () => {
 // ── Font family ───────────────────────────────────────────────────────────
 fontFamilySelect.addEventListener('change', () => {
   chrome.storage.local.set({ fontFamily: fontFamilySelect.value })
+  updateSummaries()
+})
+
+// ── Background opacity ────────────────────────────────────────────────────
+bgOpacityRange.addEventListener('input', () => {
+  const op = Number(bgOpacityRange.value)
+  bgOpacityLabel.textContent = `${op}%`
+  chrome.storage.local.set({ bgOpacity: op })
   updateSummaries()
 })
 
