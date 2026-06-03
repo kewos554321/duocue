@@ -16,6 +16,7 @@ function createOverlay() {
   div.style.fontSize   = `${fontSize}px`
   div.style.fontFamily = fontFamily
   div.style.fontWeight = bold ? 'bold' : 'normal'
+  div.style.background = `rgba(0, 0, 0, ${bgOpacity / 100})`
   document.body.appendChild(div)
 }
 
@@ -23,6 +24,7 @@ let subtitleColor = '#FFD700'
 let fontSize   = 18
 let fontFamily = 'Arial, sans-serif'
 let bold       = false
+let bgOpacity  = 75
 let translationEngine = 'free'
 
 function sanitizeColor(c) {
@@ -37,6 +39,10 @@ chrome.storage.local.get(['fontSize', 'fontFamily', 'bold'], ({ fontSize: fs, fo
   if (fs != null) fontSize   = fs
   if (ff != null) fontFamily = ff
   if (b  != null) bold       = b
+})
+
+chrome.storage.local.get('bgOpacity', ({ bgOpacity: op }) => {
+  if (op != null) bgOpacity = op
 })
 
 chrome.storage.local.get('translationEngine', ({ translationEngine: e }) => {
@@ -77,6 +83,11 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
     bold = changes.bold.newValue
     const el = document.getElementById('duocue-overlay')
     if (el) el.style.fontWeight = bold ? 'bold' : 'normal'
+  }
+  if (changes.bgOpacity) {
+    bgOpacity = changes.bgOpacity.newValue
+    const el = document.getElementById('duocue-overlay')
+    if (el) el.style.background = `rgba(0, 0, 0, ${bgOpacity / 100})`
   }
   if (changes.translationEngine) {
     translationEngine = changes.translationEngine.newValue
