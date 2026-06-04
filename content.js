@@ -280,10 +280,12 @@ function startPolling(platform) {
     const { enabled } = await chrome.storage.local.get('enabled')
     if (enabled === false) {
       updateOverlay(null, null)
+      document.getElementById('duocue-hide-native')?.remove()
       lastEnglish = null
       lastChinese = null
       return
     }
+    injectHideNativeCSS(platform)
 
     const english = extractText(platform)
 
