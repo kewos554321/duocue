@@ -17,6 +17,8 @@ function createOverlay() {
   div.style.fontFamily = fontFamily
   div.style.fontWeight = bold ? 'bold' : 'normal'
   div.style.background = `rgba(0, 0, 0, ${bgOpacity / 100})`
+  div.style.bottom     = `${subtitleBottom}%`
+  div.style.left       = `${subtitleLeft}%`
   document.body.appendChild(div)
 }
 
@@ -26,6 +28,8 @@ let fontFamily = 'Arial, sans-serif'
 let bold       = false
 let bgOpacity  = 75
 let translationEngine = 'free'
+let subtitleBottom = 10
+let subtitleLeft   = 50
 
 function sanitizeColor(c) {
   return /^#[0-9A-Fa-f]{3,8}$|^[a-zA-Z]+$/.test(c) ? c : '#FFD700'
@@ -43,6 +47,16 @@ chrome.storage.local.get(['fontSize', 'fontFamily', 'bold'], ({ fontSize: fs, fo
 
 chrome.storage.local.get('bgOpacity', ({ bgOpacity: op }) => {
   if (op != null) bgOpacity = op
+})
+
+chrome.storage.local.get(['subtitleBottom', 'subtitleLeft'], ({ subtitleBottom: b, subtitleLeft: l }) => {
+  if (b != null) subtitleBottom = b
+  if (l != null) subtitleLeft   = l
+  const el = document.getElementById('duocue-overlay')
+  if (el) {
+    el.style.bottom = `${subtitleBottom}%`
+    el.style.left   = `${subtitleLeft}%`
+  }
 })
 
 chrome.storage.local.get('translationEngine', ({ translationEngine: e }) => {
@@ -88,6 +102,16 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
     bgOpacity = changes.bgOpacity.newValue
     const el = document.getElementById('duocue-overlay')
     if (el) el.style.background = `rgba(0, 0, 0, ${bgOpacity / 100})`
+  }
+  if (changes.subtitleBottom) {
+    subtitleBottom = changes.subtitleBottom.newValue
+    const el = document.getElementById('duocue-overlay')
+    if (el) el.style.bottom = `${subtitleBottom}%`
+  }
+  if (changes.subtitleLeft) {
+    subtitleLeft = changes.subtitleLeft.newValue
+    const el = document.getElementById('duocue-overlay')
+    if (el) el.style.left = `${subtitleLeft}%`
   }
   if (changes.translationEngine) {
     translationEngine = changes.translationEngine.newValue
@@ -150,9 +174,15 @@ function extractText(platform) {
 }
 
 async function translateFree(text) {
+  const { sourceLanguage, targetLanguage } = await chrome.storage.local.get(
+    ['sourceLanguage', 'targetLanguage']
+  )
+  const src = sourceLanguage || 'en'
+  const tgt = targetLanguage || 'zh-TW'
+  if (src === tgt) return null
   try {
     const res = await fetch(
-      `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|zh-TW`
+      `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${src}|${tgt}`
     )
     const data = await res.json()
     if (data.responseStatus !== 200) return null
@@ -163,15 +193,18 @@ async function translateFree(text) {
 }
 
 async function translateGoogle(text) {
-  const { translationApiKey } = await chrome.storage.local.get('translationApiKey')
+  const { translationApiKey, targetLanguage } = await chrome.storage.local.get(
+    ['translationApiKey', 'targetLanguage']
+  )
   if (!translationApiKey) return null
+  const tgt = targetLanguage || 'zh-TW'
   try {
     const res = await fetch(
       `https://translation.googleapis.com/language/translate/v2?key=${translationApiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ q: text, target: 'zh-TW', format: 'text' }),
+        body: JSON.stringify({ q: text, target: tgt, format: 'text' }),
       }
     )
     const data = await res.json()
