@@ -1,4 +1,6 @@
 const toggle      = document.getElementById('toggle')
+const statusDot   = document.getElementById('statusDot')
+const platformStatusEl = document.getElementById('platformStatus')
 const apiKeyInput = document.getElementById('apiKey')
 const eyeBtn      = document.getElementById('eyeBtn')
 const keyStatus   = document.getElementById('keyStatus')
@@ -19,10 +21,57 @@ const freeInfo         = document.getElementById('freeInfo')
 const googleConfig     = document.getElementById('googleConfig')
 const fontSizeRange    = document.getElementById('fontSizeRange')
 const fontSizeLabel    = document.getElementById('fontSizeLabel')
-const bgOpacityRange   = document.getElementById('bgOpacityRange')
-const bgOpacityLabel   = document.getElementById('bgOpacityLabel')
-const fontFamilySelect = document.getElementById('fontFamilySelect')
-const boldToggle       = document.getElementById('boldToggle')
+const bgOpacityRange      = document.getElementById('bgOpacityRange')
+const bgOpacityLabel      = document.getElementById('bgOpacityLabel')
+const subtitleBottomRange = document.getElementById('subtitleBottomRange')
+const subtitleBottomLabel = document.getElementById('subtitleBottomLabel')
+const subtitleLeftRange   = document.getElementById('subtitleLeftRange')
+const subtitleLeftLabel   = document.getElementById('subtitleLeftLabel')
+const fontFamilySelect    = document.getElementById('fontFamilySelect')
+const boldToggle          = document.getElementById('boldToggle')
+const sourceLangSelect    = document.getElementById('sourceLangSelect')
+const targetLangSelect    = document.getElementById('targetLangSelect')
+const sourceLangRow       = document.getElementById('sourceLangRow')
+const sourceLangAutoRow   = document.getElementById('sourceLangAutoRow')
+
+// ── Platform status indicator ─────────────────────────────────────────────
+const WATCH_PATTERNS = [
+  /^https?:\/\/play\.hbomax\.com\//,
+  /^https?:\/\/www\.netflix\.com\/watch\//,
+  /^https?:\/\/www\.youtube\.com\/watch(\?|$)/,
+]
+const PLATFORM_DOMAINS = [
+  /^https?:\/\/([^/]*\.)?hbomax\.com\//,
+  /^https?:\/\/www\.netflix\.com\//,
+  /^https?:\/\/www\.youtube\.com\//,
+]
+
+function getTabStatus(url) {
+  if (!url) return 'unsupported'
+  if (WATCH_PATTERNS.some(p => p.test(url))) return 'watch'
+  if (PLATFORM_DOMAINS.some(p => p.test(url))) return 'platform'
+  return 'unsupported'
+}
+
+function updateStatusIndicator(url) {
+  const status = getTabStatus(url)
+  statusDot.classList.remove('yellow', 'red')
+  platformStatusEl.classList.remove('yellow', 'red')
+  platformStatusEl.textContent = ''
+  if (status === 'platform') {
+    statusDot.classList.add('yellow')
+    platformStatusEl.classList.add('yellow')
+    platformStatusEl.textContent = '請前往影片播放頁面'
+  } else if (status === 'unsupported') {
+    statusDot.classList.add('red')
+    platformStatusEl.classList.add('red')
+    platformStatusEl.textContent = '此頁面不支援 DuoCue'
+  }
+}
+
+chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
+  updateStatusIndicator(tab?.url)
+})
 
 // ── Summaries + accordion ─────────────────────────────────────────────────
 const PLATFORM_NAMES = { hbomax: 'HBO Max', netflix: 'Netflix', youtube: 'YouTube' }
@@ -31,6 +80,24 @@ const COLOR_NAMES = {
   '#FFD700': '金色', '#FFFFFF': '白色', '#00E5FF': '青色',
   '#FF6B6B': '紅色', '#98FB98': '綠色',
 }
+
+const LANG_LIST = [
+  { code: 'zh-TW', label: '繁體中文', abbr: '繁中' },
+  { code: 'zh-CN', label: '簡體中文', abbr: '簡中' },
+  { code: 'en',    label: '英文',     abbr: 'EN'   },
+  { code: 'ja',    label: '日文',     abbr: '日文' },
+  { code: 'ko',    label: '韓文',     abbr: '韓文' },
+  { code: 'es',    label: '西班牙文', abbr: '西文' },
+  { code: 'fr',    label: '法文',     abbr: '法文' },
+  { code: 'de',    label: '德文',     abbr: '德文' },
+  { code: 'pt',    label: '葡萄牙文', abbr: '葡文' },
+  { code: 'vi',    label: '越南文',   abbr: '越文' },
+]
+
+LANG_LIST.forEach(({ code, label }) => {
+  sourceLangSelect.appendChild(new Option(label, code))
+  targetLangSelect.appendChild(new Option(label, code))
+})
 
 function colorName(hex) {
   if (!hex) return '自訂'
@@ -54,8 +121,14 @@ function updateSummaries() {
   document.getElementById('summaryAppearance').textContent = `${cName} · ${size}pt · ${font} · ${op}%`
 
   const activeEngine = [...engineBtns].find(b => b.classList.contains('active'))
-  document.getElementById('summaryEngine').textContent =
-    activeEngine?.dataset.engine === 'google' ? 'Google Translate' : '免費'
+  const isGoogle = activeEngine?.dataset.engine === 'google'
+  const tgtAbbr = LANG_LIST.find(l => l.code === targetLangSelect.value)?.abbr ?? targetLangSelect.value
+  if (isGoogle) {
+    document.getElementById('summaryEngine').textContent = `Google · ${tgtAbbr}`
+  } else {
+    const srcAbbr = LANG_LIST.find(l => l.code === sourceLangSelect.value)?.abbr ?? sourceLangSelect.value
+    document.getElementById('summaryEngine').textContent = `免費 · ${srcAbbr}→${tgtAbbr}`
+  }
 
   document.getElementById('summaryTranscript').textContent =
     transcriptToggle.classList.contains('on') ? '記錄中' : '關閉'
@@ -116,10 +189,13 @@ async function clearTranscript() {
 chrome.storage.local.get(
   ['translationApiKey', 'enabled', 'subtitleColor', 'displayMode', 'transcriptEnabled',
    'transcriptLines', 'transcriptStorageFull', 'fontSize', 'fontFamily', 'bold',
-   'translationEngine', 'selectedPlatform', 'detectedPlatform', 'bgOpacity'],
+   'translationEngine', 'selectedPlatform', 'detectedPlatform', 'bgOpacity',
+   'subtitleBottom', 'subtitleLeft', 'sourceLanguage', 'targetLanguage'],
   ({ translationApiKey, enabled, subtitleColor, displayMode, transcriptEnabled,
      transcriptLines = [], transcriptStorageFull, fontSize, fontFamily, bold,
-     translationEngine, selectedPlatform, detectedPlatform, bgOpacity: savedOp }) => {
+     translationEngine, selectedPlatform, detectedPlatform, bgOpacity: savedOp,
+     subtitleBottom: savedBottom, subtitleLeft: savedLeft,
+     sourceLanguage, targetLanguage }) => {
 
     if (enabled !== false) toggle.classList.add('on')
 
@@ -139,6 +215,14 @@ chrome.storage.local.get(
     bgOpacityRange.value       = op
     bgOpacityLabel.textContent = `${op}%`
 
+    const bottom = savedBottom ?? 10
+    subtitleBottomRange.value       = bottom
+    subtitleBottomLabel.textContent = `${bottom}%`
+
+    const left = savedLeft ?? 50
+    subtitleLeftRange.value       = left
+    subtitleLeftLabel.textContent = `${left}%`
+
     if (transcriptEnabled === true) {
       transcriptToggle.classList.add('on')
       transcriptBody.classList.remove('hidden')
@@ -146,6 +230,8 @@ chrome.storage.local.get(
     }
 
     selectEngine(translationEngine || 'free')
+    sourceLangSelect.value = sourceLanguage || 'en'
+    targetLangSelect.value = targetLanguage || 'zh-TW'
     selectPlatform(selectedPlatform || 'auto', detectedPlatform)
     initSections()
     updateSummaries()
@@ -204,14 +290,27 @@ segBtns.forEach(btn => {
 // ── Engine picker ──────────────────────────────────────────────────────────
 function selectEngine(engine) {
   engineBtns.forEach(b => b.classList.toggle('active', b.dataset.engine === engine))
-  freeInfo.style.display     = engine === 'free'   ? ''     : 'none'
-  googleConfig.style.display = engine === 'google' ? 'flex' : 'none'
+  freeInfo.style.display          = engine === 'free'   ? ''     : 'none'
+  googleConfig.style.display      = engine === 'google' ? 'flex' : 'none'
+  sourceLangRow.style.display     = engine === 'free'   ? ''     : 'none'
+  sourceLangAutoRow.style.display = engine === 'google' ? ''     : 'none'
   chrome.storage.local.set({ translationEngine: engine })
   updateSummaries()
 }
 
 engineBtns.forEach(btn => {
   btn.addEventListener('click', () => selectEngine(btn.dataset.engine))
+})
+
+// ── Language pickers ──────────────────────────────────────────────────────
+sourceLangSelect.addEventListener('change', () => {
+  chrome.storage.local.set({ sourceLanguage: sourceLangSelect.value })
+  updateSummaries()
+})
+
+targetLangSelect.addEventListener('change', () => {
+  chrome.storage.local.set({ targetLanguage: targetLangSelect.value })
+  updateSummaries()
 })
 
 // ── Platform picker ───────────────────────────────────────────────────────
@@ -257,6 +356,19 @@ bgOpacityRange.addEventListener('input', () => {
   bgOpacityLabel.textContent = `${op}%`
   chrome.storage.local.set({ bgOpacity: op })
   updateSummaries()
+})
+
+// ── Subtitle position ─────────────────────────────────────────────────────
+subtitleBottomRange.addEventListener('input', () => {
+  const v = Number(subtitleBottomRange.value)
+  subtitleBottomLabel.textContent = `${v}%`
+  chrome.storage.local.set({ subtitleBottom: v })
+})
+
+subtitleLeftRange.addEventListener('input', () => {
+  const v = Number(subtitleLeftRange.value)
+  subtitleLeftLabel.textContent = `${v}%`
+  chrome.storage.local.set({ subtitleLeft: v })
 })
 
 // ── Bold ──────────────────────────────────────────────────────────────────
