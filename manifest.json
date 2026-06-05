@@ -3,7 +3,8 @@
   "name": "DuoCue",
   "version": "0.1.1",
   "description": "Bilingual subtitles for streaming platforms",
-  "permissions": ["storage", "downloads"],
+  "author": "Wei Chieh Wang",
+  "permissions": ["storage", "downloads", "activeTab", "tabs"],
   "host_permissions": [
     "https://translation.googleapis.com/*",
     "https://api.mymemory.translated.net/*"
