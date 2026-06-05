@@ -30,7 +30,19 @@
       border-radius: 50%;
       background: #30D158;
       flex-shrink: 0;
+      transition: background 0.2s;
     }
+    .status-dot.yellow { background: #FF9F0A; }
+    .status-dot.red    { background: #FF453A; }
+
+    #platformStatus {
+      font-size: 11px;
+      margin-top: 6px;
+      line-height: 1.4;
+      display: none;
+    }
+    #platformStatus.yellow { color: #FF9F0A; display: block; }
+    #platformStatus.red    { color: #FF453A; display: block; }
     .title-text {
       font-size: 17px;
       font-weight: 600;
@@ -325,6 +337,16 @@
       pointer-events: none;
     }
 
+    /* ── Language selects ── */
+    .lang-select-wrap {
+      width: 130px;
+    }
+    .lang-select-wrap select {
+      height: 30px;
+      font-size: 13px;
+      padding: 0 28px 0 10px;
+    }
+
     /* ── Sections (accordion) ── */
     #sections {
       padding: 10px 16px;
@@ -433,12 +455,13 @@
   <!-- Header -->
   <div class="header">
     <div class="header-title">
-      <div class="status-dot"></div>
+      <div class="status-dot" id="statusDot"></div>
       <span class="title-text">DuoCue</span>
       <div class="toggle" id="toggle">
         <div class="toggle-knob"></div>
       </div>
     </div>
+    <div id="platformStatus"></div>
   </div>
 
   <div id="sections">
@@ -515,6 +538,20 @@
           <input type="range" id="bgOpacityRange" min="0" max="100" step="5" value="75">
         </div>
         <div>
+          <div class="slider-row">
+            <span class="section-label" style="margin-bottom:0">垂直位置</span>
+            <span class="slider-value" id="subtitleBottomLabel">10%</span>
+          </div>
+          <input type="range" id="subtitleBottomRange" min="5" max="80" step="1" value="10">
+        </div>
+        <div>
+          <div class="slider-row">
+            <span class="section-label" style="margin-bottom:0">水平位置</span>
+            <span class="slider-value" id="subtitleLeftLabel">50%</span>
+          </div>
+          <input type="range" id="subtitleLeftRange" min="10" max="90" step="1" value="50">
+        </div>
+        <div>
           <span class="section-label">字型</span>
           <div class="select-wrap">
             <select id="fontFamilySelect">
@@ -550,6 +587,25 @@
           <div>
             <div class="engine-info-title">MyMemory 免費翻譯</div>
             <div class="engine-info-desc">每天 1,000 字，無需帳號</div>
+          </div>
+        </div>
+        <!-- language config -->
+        <div id="langConfig" style="display:flex;flex-direction:column;gap:6px;margin-top:8px">
+          <div id="sourceLangRow" class="field-header" style="margin-bottom:0">
+            <span class="field-label">原文語言</span>
+            <div class="select-wrap lang-select-wrap">
+              <select id="sourceLangSelect"></select>
+            </div>
+          </div>
+          <div id="sourceLangAutoRow" class="field-header" style="display:none;margin-bottom:0">
+            <span class="field-label">原文語言</span>
+            <span style="color:#8e8e93;font-size:13px">自動偵測</span>
+          </div>
+          <div class="field-header" style="margin-bottom:0">
+            <span class="field-label">目標語言</span>
+            <div class="select-wrap lang-select-wrap">
+              <select id="targetLangSelect"></select>
+            </div>
           </div>
         </div>
         <div id="googleConfig" style="display:none;flex-direction:column;gap:12px;">
@@ -594,6 +650,26 @@
             <button class="action-btn clear-btn" id="clearBtn">Clear</button>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- ⑤ 關於 -->
+    <div class="section">
+      <div class="section-header" id="hdrAbout" role="button" aria-expanded="false">
+        <span class="section-title">關於</span>
+        <span class="section-summary" id="summaryAbout">Wei Chieh Wang</span>
+        <svg class="chevron" width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="section-body" id="bodyAbout" style="display:none; gap:10px;">
+        <div style="font-size:12px; color:#8E8E93; line-height:1.8;">
+          <div style="color:#EBEBF5; font-weight:500; margin-bottom:4px;">Wei Chieh Wang</div>
+          <a href="mailto:kewos554321@gmail.com" style="color:#8E8E93; text-decoration:none; display:block;">kewos554321@gmail.com</a>
+          <a href="https://github.com/kewos554321" target="_blank" style="color:#8E8E93; text-decoration:none; display:block;">github.com/kewos554321</a>
+        </div>
+        <a href="https://buymeacoffee.com/kewos55432m" target="_blank"
+           style="display:flex; align-items:center; justify-content:center; gap:6px; padding:9px; background:#FFDD00; color:#7A5C00; border-radius:10px; font-size:13px; font-weight:600; text-decoration:none;">
+          ☕ Buy me a coffee
+        </a>
       </div>
     </div>
 
