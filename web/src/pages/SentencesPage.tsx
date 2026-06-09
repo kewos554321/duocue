@@ -9,9 +9,10 @@ interface Props {
   wordMap: Map<string, WordStatus>
   selectedVideoUrl: string | null
   onUpdateWordStatus: (word: string, status: WordStatus) => Promise<void>
+  onDeleteSentence: (id: number) => Promise<void>
 }
 
-export default function SentencesPage({ sentences, wordMap, selectedVideoUrl, onUpdateWordStatus }: Props) {
+export default function SentencesPage({ sentences, wordMap, selectedVideoUrl, onUpdateWordStatus, onDeleteSentence }: Props) {
   const [filter, setFilter] = useState<Filter>('all')
   const [search, setSearch] = useState('')
 
@@ -79,6 +80,7 @@ export default function SentencesPage({ sentences, wordMap, selectedVideoUrl, on
               sentence={s}
               wordMap={wordMap}
               onUpdateWordStatus={onUpdateWordStatus}
+              onDelete={onDeleteSentence}
             />
           ))}
         </div>

@@ -5,6 +5,7 @@ interface Props {
   sentence: ApiSentence
   wordMap: Map<string, WordStatus>
   onUpdateWordStatus: (word: string, status: WordStatus) => Promise<void>
+  onDelete: (id: number) => Promise<void>
 }
 
 const PLATFORM_BADGE: Record<string, string> = {
@@ -40,7 +41,7 @@ function tokenize(text: string): Array<{ raw: string; isWord: boolean }> {
   }))
 }
 
-export default function SentenceCard({ sentence, wordMap, onUpdateWordStatus }: Props) {
+export default function SentenceCard({ sentence, wordMap, onUpdateWordStatus, onDelete }: Props) {
   const tokens = tokenize(sentence.text)
 
   const taggedWords = [
@@ -63,14 +64,23 @@ export default function SentenceCard({ sentence, wordMap, onUpdateWordStatus }: 
             {sentence.videoTitle ?? sentence.videoUrl.replace(/^https?:\/\//, '').slice(0, 50)}
           </span>
         </div>
-        <a
-          href={getJumpUrl(sentence.videoUrl, sentence.platform, sentence.timestampS)}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs text-blue-400 hover:text-blue-300 shrink-0"
-        >
-          ▶ {formatTime(sentence.timestampS)} 跳回
-        </a>
+        <div className="flex items-center gap-3 shrink-0">
+          <a
+            href={getJumpUrl(sentence.videoUrl, sentence.platform, sentence.timestampS)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-blue-400 hover:text-blue-300"
+          >
+            ▶ {formatTime(sentence.timestampS)} 跳回
+          </a>
+          <button
+            onClick={() => onDelete(sentence.id)}
+            className="text-white/20 hover:text-red-400 transition-colors text-sm"
+            title="刪除"
+          >
+            ✕
+          </button>
+        </div>
       </div>
 
       {/* English text with word-status coloring */}

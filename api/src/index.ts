@@ -74,6 +74,13 @@ app.get('/sentences', async (c) => {
   return c.json({ sentences: results })
 })
 
+app.delete('/sentences/:id', async (c) => {
+  const id = parseInt(c.req.param('id'))
+  if (isNaN(id)) return c.json({ error: 'Invalid id' }, 400)
+  await c.env.DB.prepare('DELETE FROM sentences WHERE id = ?').bind(id).run()
+  return c.json({ deleted: id })
+})
+
 app.get('/words', async (c) => {
   const { results } = await c.env.DB.prepare(
     `SELECT word, status FROM words ORDER BY word`

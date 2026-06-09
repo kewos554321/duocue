@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import Layout from './components/Layout'
 import SentencesPage from './pages/SentencesPage'
 import WordBookPage from './pages/WordBookPage'
-import { fetchSentences, fetchVideos, fetchWords, patchWordStatus } from './api'
+import { fetchSentences, fetchVideos, fetchWords, patchWordStatus, deleteSentence } from './api'
 import type { ApiSentence, ApiVideo, ApiWord, WordStatus } from './types'
 
 export default function App() {
@@ -25,6 +25,11 @@ export default function App() {
       .catch(e => setError(String(e)))
       .finally(() => setLoading(false))
   }, [])
+
+  const handleDeleteSentence = async (id: number) => {
+    await deleteSentence(id)
+    setSentences(prev => prev.filter(s => s.id !== id))
+  }
 
   const updateWordStatus = async (word: string, status: WordStatus) => {
     await patchWordStatus(word, status)
@@ -69,6 +74,7 @@ export default function App() {
           wordMap={wordMap}
           selectedVideoUrl={selectedVideoUrl}
           onUpdateWordStatus={updateWordStatus}
+          onDeleteSentence={handleDeleteSentence}
         />
       ) : (
         <WordBookPage

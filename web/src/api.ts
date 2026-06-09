@@ -27,6 +27,14 @@ export async function fetchWords(): Promise<ApiWord[]> {
   return words as ApiWord[]
 }
 
+export async function deleteSentence(id: number): Promise<void> {
+  const res = await fetch(`${API_ENDPOINT}/sentences/${id}`, {
+    method: 'DELETE',
+    headers: authHeaders,
+  })
+  if (!res.ok) throw new Error(`DELETE /sentences/${id} failed: ${res.status}`)
+}
+
 export async function patchWordStatus(word: string, status: WordStatus): Promise<void> {
   const res = await fetch(`${API_ENDPOINT}/words/${encodeURIComponent(word.toLowerCase())}`, {
     method: 'PATCH',
