@@ -1,10 +1,10 @@
 ========================================
   DuoCue — Chrome Web Store 填寫素材
-  最後更新: v0.1.1 (2026-06-04)
+  最後更新: v0.2.0 (2026-06-09)
 ========================================
 
 【Short description (132字元內)】
-Bilingual subtitles for HBO Max — display original and translated subtitles side by side to boost your language learning.
+Bilingual subtitles for streaming — click any word to look up its meaning and mark it as learning or learned.
 
 
 【Detailed description】
@@ -12,6 +12,8 @@ DuoCue adds bilingual subtitles to your streaming experience, helping you learn 
 
 Features:
 • Overlay original subtitles with your target language translation
+• Click any word to look up its definition — mark it as 學習中 (learning) or 已懂 (known)
+• Word status persists across sessions: learning words shown in orange, known words in green
 • Customize font size, font family, and bold styling
 • Powered by Google Translate for real-time translation
 • Lightweight — no account required, works instantly
@@ -30,7 +32,7 @@ DuoCue displays bilingual subtitles on streaming platforms (HBO Max) to help use
 
 
 【storage 權限理由】
-Used to save user preferences locally on the device: subtitle color, font size, font family, bold setting, display mode, Google Translate API key, and transcript lines. No data leaves the device via this permission.
+Used to save user preferences locally on the device: subtitle color, font size, font family, bold setting, display mode, Google Translate API key, transcript lines, and word status map (per-word learning/known state). No data leaves the device via this permission.
 
 
 【downloads 權限理由】

@@ -1,13 +1,14 @@
 {
   "manifest_version": 3,
   "name": "DuoCue",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Bilingual subtitles for streaming platforms",
   "author": "Wei Chieh Wang",
   "permissions": ["storage", "downloads", "activeTab", "tabs"],
   "host_permissions": [
     "https://translation.googleapis.com/*",
-    "https://api.mymemory.translated.net/*"
+    "https://api.mymemory.translated.net/*",
+    "https://api.dictionaryapi.dev/*"
   ],
   "icons": {
     "16": "icons/icon16.png",

@@ -15,9 +15,155 @@
 
 .duocue-en {
   color: #ffffff;
+  user-select: none;
+  pointer-events: auto;
 }
 
 .duocue-zh {
   margin-top: 4px;
   white-space: normal;
 }
+
+.duocue-word {
+  pointer-events: auto;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: background 0.1s;
+}
+
+.duocue-word:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+}
+
+.duocue-word--learning {
+  color: #FB923C;
+  border-bottom: 1.5px solid rgba(251, 146, 60, 0.6);
+  padding-bottom: 1px;
+}
+
+.duocue-word--learned {
+  color: #4ADE80;
+  border-bottom: 1.5px solid rgba(74, 222, 128, 0.5);
+  padding-bottom: 1px;
+}
+
+.duocue-word--learning:hover { background: rgba(251, 146, 60, 0.15); }
+.duocue-word--learned:hover  { background: rgba(74, 222, 128, 0.12); }
+
+.duocue-word--range {
+  background: rgba(10, 132, 255, 0.35);
+  border-radius: 2px;
+}
+
+.duocue-line-box {
+  position: fixed;
+  z-index: 100000;
+  border: 1.5px solid rgba(10, 132, 255, 0.9);
+  background: rgba(10, 132, 255, 0.12);
+  border-radius: 3px;
+  pointer-events: none;
+}
+
+#duocue-tooltip {
+  position: fixed;
+  z-index: 100001;
+  background: #1C1C1E;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 14px 16px;
+  min-width: 200px;
+  max-width: 260px;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+  font-size: 13px;
+  color: #fff;
+  display: none;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7), inset 0 0 0 0.5px rgba(255, 255, 255, 0.06);
+  pointer-events: auto;
+}
+
+#duocue-tooltip.visible {
+  display: block;
+}
+
+.duocue-tt-header {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.duocue-tt-word {
+  font-size: 18px;
+  font-weight: 700;
+  color: #EDEDEF;
+  letter-spacing: -0.3px;
+}
+
+.duocue-tt-pos {
+  font-size: 11px;
+  color: #636366;
+  font-style: italic;
+}
+
+.duocue-tt-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 20px;
+  margin-left: auto;
+}
+
+.duocue-tt-badge--learning {
+  background: rgba(251, 146, 60, 0.15);
+  color: #FB923C;
+}
+
+.duocue-tt-badge--learned {
+  background: rgba(74, 222, 128, 0.12);
+  color: #4ADE80;
+}
+
+.duocue-tt-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+  margin: 0 0 10px;
+}
+
+.duocue-tt-trans {
+  font-size: 15px;
+  font-weight: 500;
+  color: #FFD700;
+  margin-bottom: 12px;
+}
+
+.duocue-tt-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.duocue-tt-btn {
+  flex: 1;
+  padding: 7px 0;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  transition: background 0.15s;
+}
+
+.duocue-tt-btn--learn {
+  background: rgba(99, 102, 241, 0.18);
+  color: #818CF8;
+}
+
+.duocue-tt-btn--know {
+  background: rgba(74, 222, 128, 0.15);
+  color: #4ADE80;
+}
+
+.duocue-tt-btn--learn:hover { background: rgba(99, 102, 241, 0.28); }
+.duocue-tt-btn--know:hover  { background: rgba(74, 222, 128, 0.25); }
