@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { Search } from 'lucide-react'
 import SentenceCard from '../components/SentenceCard'
 import type { ApiSentence, WordStatus } from '../types'
 
@@ -42,39 +43,66 @@ export default function SentencesPage({ sentences, wordMap, selectedVideoUrl, on
     return result
   }, [sentences, selectedVideoUrl, filter, search, wordMap])
 
-  const FILTERS: [Filter, string][] = [['all', '全部'], ['learning', '有學習中'], ['unmarked', '未標記']]
+  const FILTERS: [Filter, string][] = [['all', '全部'], ['learning', '學習中'], ['unmarked', '未標記']]
 
   return (
     <div>
+      {/* Controls row */}
       <div className="flex items-center gap-3 mb-6 flex-wrap">
-        <div className="flex gap-1">
+        {/* iOS-style segmented control */}
+        <div
+          className="flex rounded-lg p-0.5"
+          style={{ background: 'rgba(120,120,128,0.12)' }}
+        >
           {FILTERS.map(([f, label]) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
-                filter === f
-                  ? 'bg-gray-900 dark:bg-white text-white dark:text-black font-medium'
-                  : 'bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-white/60 hover:bg-gray-200 dark:hover:bg-white/15'
-              }`}
+              className="px-3 py-1 rounded-[6px] text-[13px] transition-all duration-200"
+              style={{
+                background: filter === f ? 'var(--bg-card)' : 'transparent',
+                color: filter === f ? 'var(--text-primary)' : 'var(--text-secondary)',
+                fontWeight: filter === f ? 600 : 400,
+                boxShadow: filter === f ? '0 1px 3px rgba(0,0,0,0.12)' : 'none',
+              }}
             >
               {label}
             </button>
           ))}
         </div>
-        <input
-          type="text"
-          placeholder="搜尋句子…"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="flex-1 min-w-40 max-w-xs bg-gray-100 dark:bg-white/10 rounded-lg px-3 py-1.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/30 outline-none focus:bg-gray-200 dark:focus:bg-white/15 transition-colors"
-        />
+
+        {/* Search input */}
+        <div className="relative flex-1 min-w-40 max-w-xs">
+          <Search
+            size={14}
+            className="absolute left-3 top-1/2 -translate-y-1/2"
+            style={{ color: 'var(--text-secondary)' }}
+          />
+          <input
+            type="text"
+            placeholder="搜尋句子…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full rounded-xl pl-8 pr-3 py-1.5 text-[14px] outline-none transition-all"
+            style={{
+              background: 'rgba(120,120,128,0.12)',
+              color: 'var(--text-primary)',
+            }}
+            onFocus={e => (e.currentTarget.style.background = 'rgba(120,120,128,0.18)')}
+            onBlur={e => (e.currentTarget.style.background = 'rgba(120,120,128,0.12)')}
+          />
+        </div>
       </div>
 
       {filtered.length === 0 ? (
-        <div className="text-gray-400 dark:text-white/30 text-sm">沒有符合的句子</div>
+        <div
+          className="text-center py-16 text-[14px]"
+          style={{ color: 'var(--text-secondary)' }}
+        >
+          沒有符合的句子
+        </div>
       ) : (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3">
           {filtered.map(s => (
             <SentenceCard
               key={s.id}

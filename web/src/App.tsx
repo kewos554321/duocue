@@ -49,7 +49,7 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-black text-white/40 text-sm">
+      <div className="flex items-center justify-center h-screen" style={{ background: 'var(--bg-primary)', color: 'var(--text-secondary)', fontSize: '14px' }}>
         載入中…
       </div>
     )
@@ -57,7 +57,7 @@ export default function App() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-screen bg-black text-red-400 text-sm">
+      <div className="flex items-center justify-center h-screen" style={{ background: 'var(--bg-primary)', color: 'var(--ios-red)', fontSize: '14px' }}>
         {error}
       </div>
     )

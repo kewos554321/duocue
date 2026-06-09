@@ -1,10 +1,17 @@
 import { useState } from 'react'
+import { BookOpen, BookMarked, Sparkles, ChevronDown, ChevronUp, PlayCircle } from 'lucide-react'
 import type { ApiSentence, ApiVideo, ApiWord } from '../types'
 
 const PLATFORM_LABEL: Record<string, string> = {
-  netflix: 'Netflix 🔴',
-  hbomax: 'HBO Max 🔵',
-  youtube: 'YouTube 🔴',
+  netflix: 'Netflix',
+  hbomax: 'HBO Max',
+  youtube: 'YouTube',
+}
+
+const PLATFORM_COLOR: Record<string, string> = {
+  netflix: '#E50914',
+  hbomax: '#5822B4',
+  youtube: '#FF0000',
 }
 
 interface Props {
@@ -36,68 +43,136 @@ export default function Sidebar({ sentences, videos, words, page, selectedVideoU
 
   const learningCount = words.filter(w => w.status === 'learning').length
 
+  const navActive = 'font-medium'
+  const navBase = 'w-full text-left px-3 py-2 rounded-xl text-[14px] flex items-center justify-between transition-all duration-150 active:scale-[0.98]'
+
   return (
-    <aside className="w-56 shrink-0 flex flex-col bg-white dark:bg-[#1C1C1E] border-r border-gray-200 dark:border-white/10 overflow-y-auto">
+    <aside
+      className="w-56 shrink-0 flex flex-col border-r overflow-y-auto"
+      style={{ background: 'var(--bg-card)', borderColor: 'var(--separator)' }}
+    >
       {/* Main nav */}
-      <nav className="px-2 pt-3 flex flex-col gap-1">
+      <nav className="px-2 pt-3 flex flex-col gap-0.5">
         <button
           onClick={() => { onSelectPage('sentences'); onSelectVideo(null) }}
-          className={`w-full text-left px-3 py-2 rounded-lg text-sm flex justify-between items-center transition-colors ${
-            page === 'sentences' && selectedVideoUrl === null
-              ? 'bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white'
-              : 'text-gray-500 dark:text-white/60 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5'
-          }`}
+          className={`${navBase} ${page === 'sentences' && selectedVideoUrl === null ? navActive : ''}`}
+          style={{
+            color: page === 'sentences' && selectedVideoUrl === null ? 'var(--ios-blue)' : 'var(--text-primary)',
+            background: page === 'sentences' && selectedVideoUrl === null ? 'rgba(0,122,255,0.1)' : 'transparent',
+          }}
+          onMouseEnter={e => {
+            if (!(page === 'sentences' && selectedVideoUrl === null))
+              (e.currentTarget as HTMLButtonElement).style.background = 'rgba(120,120,128,0.08)'
+          }}
+          onMouseLeave={e => {
+            if (!(page === 'sentences' && selectedVideoUrl === null))
+              (e.currentTarget as HTMLButtonElement).style.background = 'transparent'
+          }}
         >
-          <span>📖 全部句子</span>
-          <span className="text-xs bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-white/50 rounded px-1.5 py-0.5">{sentences.length}</span>
+          <span className="flex items-center gap-2.5">
+            <BookOpen size={16} strokeWidth={1.8} />
+            全部句子
+          </span>
+          <Badge count={sentences.length} active={page === 'sentences' && selectedVideoUrl === null} />
         </button>
 
         <button
           onClick={() => onSelectPage('words')}
-          className={`w-full text-left px-3 py-2 rounded-lg text-sm flex justify-between items-center transition-colors ${
-            page === 'words'
-              ? 'bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white'
-              : 'text-gray-500 dark:text-white/60 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5'
-          }`}
+          className={`${navBase} ${page === 'words' ? navActive : ''}`}
+          style={{
+            color: page === 'words' ? 'var(--ios-blue)' : 'var(--text-primary)',
+            background: page === 'words' ? 'rgba(0,122,255,0.1)' : 'transparent',
+          }}
+          onMouseEnter={e => {
+            if (page !== 'words')
+              (e.currentTarget as HTMLButtonElement).style.background = 'rgba(120,120,128,0.08)'
+          }}
+          onMouseLeave={e => {
+            if (page !== 'words')
+              (e.currentTarget as HTMLButtonElement).style.background = 'transparent'
+          }}
         >
-          <span>📝 單字本</span>
-          <span className="text-xs bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-white/50 rounded px-1.5 py-0.5">{learningCount}</span>
+          <span className="flex items-center gap-2.5">
+            <BookMarked size={16} strokeWidth={1.8} />
+            單字本
+          </span>
+          {learningCount > 0 && <Badge count={learningCount} active={page === 'words'} />}
         </button>
 
         <button
           disabled
-          className="w-full text-left px-3 py-2 rounded-lg text-sm flex justify-between items-center text-gray-300 dark:text-white/25 cursor-not-allowed"
+          className={`${navBase} opacity-30`}
+          style={{ color: 'var(--text-secondary)' }}
         >
-          <span>🧠 練習</span>
-          <span className="text-xs bg-gray-100 dark:bg-white/5 rounded px-1.5 py-0.5">未來</span>
+          <span className="flex items-center gap-2.5">
+            <Sparkles size={16} strokeWidth={1.8} />
+            練習
+          </span>
+          <span
+            className="text-[11px] rounded-md px-1.5 py-0.5"
+            style={{ background: 'rgba(120,120,128,0.12)', color: 'var(--text-secondary)' }}
+          >
+            即將推出
+          </span>
         </button>
       </nav>
 
       {/* Video groups */}
       {Object.keys(platformGroups).length > 0 && (
-        <div className="mt-4 px-2">
-          <div className="px-3 py-1 text-xs text-gray-400 dark:text-white/30 uppercase tracking-wider mb-1">依影片</div>
+        <div className="mt-5 px-2">
+          <div
+            className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider"
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            依影片
+          </div>
           {Object.entries(platformGroups).map(([platform, vids]) => (
             <div key={platform}>
               <button
                 onClick={() => togglePlatform(platform)}
-                className="w-full text-left px-3 py-2 text-sm text-gray-400 dark:text-white/50 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg flex justify-between items-center transition-colors"
+                className="w-full text-left px-3 py-2 rounded-xl text-[13px] flex justify-between items-center transition-all duration-150"
+                style={{ color: 'var(--text-secondary)' }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(120,120,128,0.08)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
               >
-                <span>{PLATFORM_LABEL[platform] ?? platform}</span>
-                <span className="text-xs">{expandedPlatforms.has(platform) ? '▲' : '▼'}</span>
+                <span className="flex items-center gap-2">
+                  <span
+                    className="w-2 h-2 rounded-full shrink-0"
+                    style={{ background: PLATFORM_COLOR[platform] ?? '#888' }}
+                  />
+                  {PLATFORM_LABEL[platform] ?? platform}
+                </span>
+                {expandedPlatforms.has(platform)
+                  ? <ChevronUp size={12} strokeWidth={2} />
+                  : <ChevronDown size={12} strokeWidth={2} />
+                }
               </button>
               {expandedPlatforms.has(platform) && vids.map(v => (
                 <button
                   key={v.url}
                   onClick={() => { onSelectPage('sentences'); onSelectVideo(v.url) }}
-                  className={`w-full text-left px-4 py-1.5 text-xs rounded-lg flex justify-between items-center transition-colors ${
-                    selectedVideoUrl === v.url
-                      ? 'bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white'
-                      : 'text-gray-400 dark:text-white/40 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5'
-                  }`}
+                  className="w-full text-left pl-7 pr-3 py-1.5 text-[12px] rounded-xl flex justify-between items-center gap-2 transition-all duration-150"
+                  style={{
+                    color: selectedVideoUrl === v.url ? 'var(--ios-blue)' : 'var(--text-secondary)',
+                    background: selectedVideoUrl === v.url ? 'rgba(0,122,255,0.08)' : 'transparent',
+                    fontWeight: selectedVideoUrl === v.url ? 500 : 400,
+                  }}
+                  onMouseEnter={e => {
+                    if (selectedVideoUrl !== v.url)
+                      (e.currentTarget as HTMLButtonElement).style.background = 'rgba(120,120,128,0.08)'
+                  }}
+                  onMouseLeave={e => {
+                    if (selectedVideoUrl !== v.url)
+                      (e.currentTarget as HTMLButtonElement).style.background = selectedVideoUrl === v.url ? 'rgba(0,122,255,0.08)' : 'transparent'
+                  }}
                 >
-                  <span className="truncate">{v.title ?? v.url.replace(/^https?:\/\//, '').slice(0, 32) + '…'}</span>
-                  <span className="ml-1 shrink-0 text-gray-300 dark:text-white/30">{v.sentenceCount}</span>
+                  <span className="flex items-center gap-1.5 min-w-0">
+                    <PlayCircle size={11} strokeWidth={1.8} className="shrink-0" />
+                    <span className="truncate">{v.title ?? v.url.replace(/^https?:\/\//, '').slice(0, 28) + '…'}</span>
+                  </span>
+                  <span className="shrink-0 text-[11px]" style={{ color: 'var(--text-secondary)', opacity: 0.6 }}>
+                    {v.sentenceCount}
+                  </span>
                 </button>
               ))}
             </div>
@@ -105,16 +180,36 @@ export default function Sidebar({ sentences, videos, words, page, selectedVideoU
         </div>
       )}
 
-      {/* Account (hardcoded MVP) */}
-      <div className="mt-auto px-4 py-4 border-t border-gray-200 dark:border-white/10 flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-sm font-bold shrink-0 text-white">
+      {/* Account */}
+      <div
+        className="mt-auto px-4 py-4 flex items-center gap-3 border-t"
+        style={{ borderColor: 'var(--separator)' }}
+      >
+        <div
+          className="w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-semibold shrink-0 text-white"
+          style={{ background: 'var(--ios-blue)' }}
+        >
           W
         </div>
         <div className="min-w-0">
-          <div className="text-sm text-gray-900 dark:text-white truncate">Wei Chieh</div>
-          <div className="text-xs text-gray-400 dark:text-white/40 truncate">kewos554321@gmail.com</div>
+          <div className="text-[13px] font-medium truncate" style={{ color: 'var(--text-primary)' }}>Wei Chieh</div>
+          <div className="text-[11px] truncate" style={{ color: 'var(--text-secondary)' }}>kewos554321@gmail.com</div>
         </div>
       </div>
     </aside>
+  )
+}
+
+function Badge({ count, active }: { count: number; active: boolean }) {
+  return (
+    <span
+      className="text-[11px] rounded-full px-1.5 py-0.5 min-w-[20px] text-center tabular-nums"
+      style={{
+        background: active ? 'rgba(0,122,255,0.15)' : 'rgba(120,120,128,0.12)',
+        color: active ? 'var(--ios-blue)' : 'var(--text-secondary)',
+      }}
+    >
+      {count}
+    </span>
   )
 }

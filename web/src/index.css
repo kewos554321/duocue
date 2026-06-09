@@ -2,11 +2,53 @@
 
 @variant dark (&:where(.dark, .dark *));
 
+:root {
+  --bg-primary: #F2F2F7;
+  --bg-card: #FFFFFF;
+  --bg-grouped: #F2F2F7;
+  --text-primary: #000000;
+  --text-secondary: rgba(60, 60, 67, 0.6);
+  --separator: rgba(60, 60, 67, 0.29);
+  --ios-blue: #007AFF;
+  --ios-orange: #FF9500;
+  --ios-green: #34C759;
+  --ios-red: #FF3B30;
+}
+
+.dark {
+  --bg-primary: #000000;
+  --bg-card: #1C1C1E;
+  --bg-grouped: #000000;
+  --text-primary: #FFFFFF;
+  --text-secondary: rgba(235, 235, 245, 0.6);
+  --separator: rgba(84, 84, 88, 0.65);
+  --ios-blue: #0A84FF;
+  --ios-orange: #FF9F0A;
+  --ios-green: #30D158;
+  --ios-red: #FF453A;
+}
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+  background: var(--bg-primary);
+  -webkit-font-smoothing: antialiased;
 }
 
 * {
   box-sizing: border-box;
+}
+
+/* Smooth scrolling */
+* {
+  scroll-behavior: smooth;
+}
+
+/* Remove default button appearance */
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: default;
 }

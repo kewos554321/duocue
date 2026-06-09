@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import React, { useState, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import Tooltip from './Tooltip'
 import type { WordStatus } from '../types'
@@ -50,12 +50,12 @@ export default function WordSpan({ word, status, onUpdateWordStatus, onRemoveWor
     }, 100)
   }, [cancelLeave])
 
-  const colorClass =
+  const colorStyle: React.CSSProperties =
     status === 'learning'
-      ? 'text-orange-400 underline decoration-orange-400 underline-offset-2'
+      ? { color: 'var(--ios-orange)', textDecoration: 'underline', textDecorationColor: 'var(--ios-orange)', textUnderlineOffset: '2px' }
       : status === 'learned'
-      ? 'text-green-400 underline decoration-green-400 underline-offset-2'
-      : ''
+      ? { color: 'var(--ios-green)', textDecoration: 'underline', textDecorationColor: 'var(--ios-green)', textUnderlineOffset: '2px' }
+      : {}
 
   return (
     <>
@@ -65,7 +65,7 @@ export default function WordSpan({ word, status, onUpdateWordStatus, onRemoveWor
         onMouseEnter={handleMouseEnter}
         onMouseLeave={startLeave}
       >
-        <span className={`cursor-pointer hover:opacity-80 ${colorClass}`}>{word}</span>
+        <span className="cursor-pointer hover:opacity-70 transition-opacity" style={colorStyle}>{word}</span>
       </span>
 
       {showTooltip && createPortal(

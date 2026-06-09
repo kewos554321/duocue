@@ -1,3 +1,4 @@
+import { BookOpenCheck, GraduationCap, X } from 'lucide-react'
 import { useDefinition } from '../hooks/useDefinition'
 import type { WordStatus } from '../types'
 
@@ -22,44 +23,80 @@ export default function Tooltip({ word, status, onUpdateWordStatus, onRemoveWord
   }
 
   return (
-    <div className="w-56 bg-white dark:bg-[#2C2C2E] border border-gray-200 dark:border-white/15 rounded-xl shadow-lg shadow-black/10 dark:shadow-black/40 p-3">
-      <div className="flex items-baseline gap-2 mb-1">
-        <span className="font-semibold text-gray-900 dark:text-white">{word}</span>
-        {partOfSpeech && <span className="text-xs text-gray-400 dark:text-white/40">{partOfSpeech}</span>}
+    <div
+      className="w-56 rounded-2xl p-3"
+      style={{
+        background: 'var(--bg-card)',
+        border: '1px solid var(--separator)',
+        boxShadow: '0 8px 24px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.08)',
+      }}
+    >
+      {/* Word + POS */}
+      <div className="flex items-baseline gap-2 mb-1.5">
+        <span
+          className="font-semibold text-[15px]"
+          style={{ color: 'var(--text-primary)' }}
+        >
+          {word}
+        </span>
+        {partOfSpeech && (
+          <span
+            className="text-[11px]"
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            {partOfSpeech}
+          </span>
+        )}
       </div>
+
+      {/* Status badge */}
       {status && (
         <div
-          className="text-xs mb-1"
-          style={{ color: status === 'learning' ? '#F97316' : '#22C55E' }}
+          className="text-[11px] mb-1.5 flex items-center gap-1"
+          style={{ color: status === 'learning' ? 'var(--ios-orange)' : 'var(--ios-green)' }}
         >
-          ● {status === 'learning' ? '學習中' : '已學習'}
+          <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: 'currentColor' }} />
+          {status === 'learning' ? '學習中' : '已學習'}
         </div>
       )}
-      <div className="text-xs text-gray-500 dark:text-white/60 mb-3 leading-relaxed">
+
+      {/* Definition */}
+      <div
+        className="text-[12px] mb-3 leading-relaxed"
+        style={{ color: 'var(--text-secondary)' }}
+      >
         {loading ? '…' : definition}
       </div>
-      <div className="flex gap-2">
+
+      {/* Action buttons */}
+      <div className="flex gap-1.5">
         <button
           onClick={() => handleMark('learning')}
-          title={status === 'learning' ? '點擊取消標記' : ''}
-          className={`flex-1 text-xs py-1.5 rounded-lg transition-colors ${
-            status === 'learning'
-              ? 'bg-orange-500/30 text-orange-400 hover:bg-orange-500/15'
-              : 'bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-white/60 hover:bg-orange-500/20 hover:text-orange-400'
-          }`}
+          title={status === 'learning' ? '點擊取消標記' : '標記為學習中'}
+          className="flex-1 flex items-center justify-center gap-1.5 text-[12px] py-1.5 rounded-xl transition-all duration-150"
+          style={{
+            background: status === 'learning' ? 'rgba(255,149,0,0.15)' : 'rgba(120,120,128,0.1)',
+            color: status === 'learning' ? 'var(--ios-orange)' : 'var(--text-secondary)',
+          }}
         >
-          {status === 'learning' ? '✕ 學習中' : '📙 學習中'}
+          {status === 'learning'
+            ? <><X size={11} strokeWidth={2.5} /> 取消</>
+            : <><GraduationCap size={12} strokeWidth={1.8} /> 學習中</>
+          }
         </button>
         <button
           onClick={() => handleMark('learned')}
-          title={status === 'learned' ? '點擊取消標記' : ''}
-          className={`flex-1 text-xs py-1.5 rounded-lg transition-colors ${
-            status === 'learned'
-              ? 'bg-green-500/30 text-green-400 hover:bg-green-500/15'
-              : 'bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-white/60 hover:bg-green-500/20 hover:text-green-400'
-          }`}
+          title={status === 'learned' ? '點擊取消標記' : '標記為已學習'}
+          className="flex-1 flex items-center justify-center gap-1.5 text-[12px] py-1.5 rounded-xl transition-all duration-150"
+          style={{
+            background: status === 'learned' ? 'rgba(52,199,89,0.15)' : 'rgba(120,120,128,0.1)',
+            color: status === 'learned' ? 'var(--ios-green)' : 'var(--text-secondary)',
+          }}
         >
-          {status === 'learned' ? '✕ 已學習' : '✅ 已學習'}
+          {status === 'learned'
+            ? <><X size={11} strokeWidth={2.5} /> 取消</>
+            : <><BookOpenCheck size={12} strokeWidth={1.8} /> 已學習</>
+          }
         </button>
       </div>
     </div>
