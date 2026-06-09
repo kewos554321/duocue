@@ -128,4 +128,41 @@ app.get('/videos', async (c) => {
   return c.json({ videos: results })
 })
 
+app.get('/practice/queue', async (c) => {
+  const { results: words } = await c.env.DB.prepare(`
+    SELECT word, interval_days AS intervalDays, next_review_at AS nextReviewAt
+    FROM words
+    WHERE status = 'learning'
+      AND (next_review_at IS NULL OR next_review_at <= unixepoch())
+    ORDER BY COALESCE(next_review_at, 0) ASC
+  `).all<{ word: string; intervalDays: number; nextReviewAt: number | null }>()
+
+  if (words.length === 0) return c.json({ queue: [] })
+
+  const stmts = words.map(w =>
+    c.env.DB.prepare(`
+      SELECT s.text, s.translation, v.url AS videoUrl, s.timestamp_s AS timestampS
+      FROM sentences s JOIN videos v ON v.id = s.video_id
+      WHERE LOWER(s.text) LIKE '% ' || LOWER(?) || ' %'
+         OR LOWER(s.text) LIKE LOWER(?) || ' %'
+         OR LOWER(s.text) LIKE '% ' || LOWER(?)
+         OR LOWER(s.text) = LOWER(?)
+      ORDER BY RANDOM() LIMIT 1
+    `).bind(w.word, w.word, w.word, w.word)
+  )
+
+  const sentenceResults = await c.env.DB.batch(stmts)
+
+  const queue = words.map((w, i) => ({
+    word: w.word,
+    intervalDays: w.intervalDays,
+    nextReviewAt: w.nextReviewAt,
+    sentence: (sentenceResults[i].results[0] as {
+      text: string; translation: string | null; videoUrl: string; timestampS: number
+    } | undefined) ?? null,
+  }))
+
+  return c.json({ queue })
+})
+
 export default app
