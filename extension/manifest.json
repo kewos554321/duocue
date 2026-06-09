@@ -8,7 +8,8 @@
   "host_permissions": [
     "https://translation.googleapis.com/*",
     "https://api.mymemory.translated.net/*",
-    "https://api.dictionaryapi.dev/*"
+    "https://api.dictionaryapi.dev/*",
+    "https://*.workers.dev/*"
   ],
   "icons": {
     "16": "icons/icon16.png",
