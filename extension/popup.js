@@ -33,6 +33,11 @@ const sourceLangSelect    = document.getElementById('sourceLangSelect')
 const targetLangSelect    = document.getElementById('targetLangSelect')
 const sourceLangRow       = document.getElementById('sourceLangRow')
 const sourceLangAutoRow   = document.getElementById('sourceLangAutoRow')
+const expToggle   = document.getElementById('expToggle')
+const expEndpoint = document.getElementById('expEndpoint')
+const expApiKey   = document.getElementById('expApiKey')
+const expEyeBtn   = document.getElementById('expEyeBtn')
+const expFields   = document.getElementById('expFields')
 
 // ── Platform status indicator ─────────────────────────────────────────────
 const WATCH_PATTERNS = [
@@ -455,3 +460,35 @@ function setKeyStatus(isSet) {
   keyStatus.textContent = isSet ? '✓ Set' : '⚠ Not set'
   keyStatus.className = 'field-status ' + (isSet ? 'set' : 'unset')
 }
+
+// ── Experimental settings ─────────────────────────────────────────────────
+chrome.storage.local.get(['experimentalMode', 'apiEndpoint', 'apiKey'], ({ experimentalMode, apiEndpoint, apiKey }) => {
+  if (experimentalMode) {
+    expToggle.classList.add('on')
+    expFields.style.opacity = '1'
+    expFields.style.pointerEvents = ''
+    document.getElementById('summaryExp').textContent = '開啟'
+  }
+  if (apiEndpoint) expEndpoint.value = apiEndpoint
+  if (apiKey) expApiKey.value = apiKey
+})
+
+expToggle.addEventListener('click', () => {
+  const isOn = expToggle.classList.toggle('on')
+  expFields.style.opacity = isOn ? '1' : '0.4'
+  expFields.style.pointerEvents = isOn ? '' : 'none'
+  document.getElementById('summaryExp').textContent = isOn ? '開啟' : '關閉'
+  chrome.storage.local.set({ experimentalMode: isOn })
+})
+
+expEndpoint.addEventListener('blur', () => {
+  chrome.storage.local.set({ apiEndpoint: expEndpoint.value.trim() })
+})
+
+expApiKey.addEventListener('blur', () => {
+  chrome.storage.local.set({ apiKey: expApiKey.value.trim() })
+})
+
+expEyeBtn.addEventListener('click', () => {
+  expApiKey.type = expApiKey.type === 'password' ? 'text' : 'password'
+})
