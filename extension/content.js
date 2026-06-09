@@ -776,6 +776,7 @@ function startPolling(platform) {
     clearTimeout(translateTimer)
     translateTimer = setTimeout(async () => {
       const chinese = await translate(english)
+      if (english !== lastEnglish) return
       lastChinese = chinese
       updateOverlay(english, chinese)
     }, 150)
@@ -830,6 +831,9 @@ document.addEventListener('keydown', async (e) => {
   if (!lastEnglish) return
   if (!_expApiEndpoint || !_expApiKey) return
 
+  const textToSave = lastEnglish
+  const translation = lastChinese ?? await translate(textToSave).catch(() => null)
+
   const platform = await detectPlatform()
   const video = document.querySelector('video')
   const timestampS = video ? Math.floor(video.currentTime) : 0
@@ -844,8 +848,8 @@ document.addEventListener('keydown', async (e) => {
       body: JSON.stringify({
         platform: platform?.id ?? 'unknown',
         videoUrl: location.href,
-        text: lastEnglish,
-        translation: lastChinese ?? null,
+        text: textToSave,
+        translation,
         timestampS
       })
     })
