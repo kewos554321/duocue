@@ -134,7 +134,7 @@ app.get('/practice/queue', async (c) => {
     FROM words
     WHERE status = 'learning'
       AND (next_review_at IS NULL OR next_review_at <= unixepoch())
-    ORDER BY COALESCE(next_review_at, 0) ASC
+    ORDER BY COALESCE(next_review_at, 0) ASC, word ASC
   `).all<{ word: string; intervalDays: number; nextReviewAt: number | null }>()
 
   if (words.length === 0) return c.json({ queue: [] })
@@ -163,6 +163,36 @@ app.get('/practice/queue', async (c) => {
   }))
 
   return c.json({ queue })
+})
+
+app.post('/practice/review', async (c) => {
+  let body: { word?: string; result?: string }
+  try {
+    body = await c.req.json()
+  } catch {
+    return c.json({ error: 'Invalid JSON body' }, 400)
+  }
+
+  const { word, result } = body
+  if (!word || (result !== 'know' && result !== 'unknown')) {
+    return c.json({ error: 'word and result ("know"|"unknown") required' }, 400)
+  }
+
+  const w = word.toLowerCase()
+  const current = await c.env.DB.prepare(
+    `SELECT interval_days FROM words WHERE word = ?`
+  ).bind(w).first<{ interval_days: number }>()
+
+  if (!current) return c.json({ error: 'Word not found' }, 404)
+
+  const newInterval = result === 'know' ? current.interval_days * 2 : 1
+  const nextReviewAt = Math.floor(Date.now() / 1000) + newInterval * 86400
+
+  await c.env.DB.prepare(
+    `UPDATE words SET interval_days = ?, next_review_at = ? WHERE word = ?`
+  ).bind(newInterval, nextReviewAt, w).run()
+
+  return c.json({ word: w, intervalDays: newInterval, nextReviewAt })
 })
 
 export default app
