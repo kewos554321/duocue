@@ -1,0 +1,19 @@
+{
+  "name": "duocue-api",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:init:local": "wrangler d1 execute duocue --local --file=schema.sql",
+    "db:init": "wrangler d1 execute duocue --file=schema.sql"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240529.0",
+    "typescript": "^5.4.5",
+    "wrangler": "^3.60.0"
+  },
+  "dependencies": {
+    "hono": "^4.4.0"
+  }
+}
