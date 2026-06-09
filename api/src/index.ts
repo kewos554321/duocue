@@ -110,6 +110,12 @@ app.patch('/words/:word', async (c) => {
   return c.json({ word, status })
 })
 
+app.delete('/words/:word', async (c) => {
+  const word = c.req.param('word').toLowerCase()
+  await c.env.DB.prepare('DELETE FROM words WHERE word = ?').bind(word).run()
+  return c.json({ deleted: word })
+})
+
 app.get('/videos', async (c) => {
   const { results } = await c.env.DB.prepare(`
     SELECT v.platform, v.url, v.title,

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import Sidebar from './Sidebar'
+import { useTheme } from '../hooks/useTheme'
 import type { ApiSentence, ApiVideo, ApiWord } from '../types'
 
 interface Props {
@@ -14,11 +15,20 @@ interface Props {
 }
 
 export default function Layout({ sentences, videos, words, page, selectedVideoUrl, onSelectPage, onSelectVideo, children }: Props) {
+  const { theme, toggleTheme } = useTheme()
+
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-black">
+    <div className="flex flex-col h-screen overflow-hidden bg-gray-50 dark:bg-black">
       {/* Header */}
-      <header className="shrink-0 h-12 flex items-center px-5 bg-[#1C1C1E] border-b border-white/10">
-        <span className="text-white font-bold text-base tracking-tight select-none">● DuoCue</span>
+      <header className="shrink-0 h-12 flex items-center justify-between px-5 bg-white dark:bg-[#1C1C1E] border-b border-gray-200 dark:border-white/10">
+        <span className="text-gray-900 dark:text-white font-bold text-base tracking-tight select-none">● DuoCue</span>
+        <button
+          onClick={toggleTheme}
+          className="text-gray-400 dark:text-white/40 hover:text-gray-600 dark:hover:text-white/70 text-lg transition-colors"
+          title={theme === 'dark' ? '切換為淺色' : '切換為深色'}
+        >
+          {theme === 'dark' ? '☀️' : '🌙'}
+        </button>
       </header>
 
       {/* Body */}

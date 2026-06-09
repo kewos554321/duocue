@@ -5,6 +5,7 @@ interface Props {
   sentence: ApiSentence
   wordMap: Map<string, WordStatus>
   onUpdateWordStatus: (word: string, status: WordStatus) => Promise<void>
+  onRemoveWordStatus: (word: string) => Promise<void>
   onDelete: (id: number) => Promise<void>
 }
 
@@ -41,7 +42,7 @@ function tokenize(text: string): Array<{ raw: string; isWord: boolean }> {
   }))
 }
 
-export default function SentenceCard({ sentence, wordMap, onUpdateWordStatus, onDelete }: Props) {
+export default function SentenceCard({ sentence, wordMap, onUpdateWordStatus, onRemoveWordStatus, onDelete }: Props) {
   const tokens = tokenize(sentence.text)
 
   const taggedWords = [
@@ -53,11 +54,11 @@ export default function SentenceCard({ sentence, wordMap, onUpdateWordStatus, on
   ]
 
   return (
-    <div className="bg-[#1C1C1E] rounded-xl p-4 border border-white/10">
+    <div className="bg-white dark:bg-[#1C1C1E] rounded-xl p-4 border border-gray-200 dark:border-white/10">
       {/* Card header */}
       <div className="flex items-center justify-between mb-3 gap-2">
-        <div className="flex items-center gap-2 text-xs text-white/40 min-w-0">
-          <span className="bg-white/10 rounded px-2 py-0.5 shrink-0">
+        <div className="flex items-center gap-2 text-xs text-gray-400 dark:text-white/40 min-w-0">
+          <span className="bg-gray-100 dark:bg-white/10 rounded px-2 py-0.5 shrink-0">
             {PLATFORM_BADGE[sentence.platform] ?? sentence.platform}
           </span>
           <span className="truncate">
@@ -69,13 +70,13 @@ export default function SentenceCard({ sentence, wordMap, onUpdateWordStatus, on
             href={getJumpUrl(sentence.videoUrl, sentence.platform, sentence.timestampS)}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-blue-400 hover:text-blue-300"
+            className="text-xs text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300"
           >
             ▶ {formatTime(sentence.timestampS)} 跳回
           </a>
           <button
             onClick={() => onDelete(sentence.id)}
-            className="text-white/20 hover:text-red-400 transition-colors text-sm"
+            className="text-gray-300 dark:text-white/20 hover:text-red-400 transition-colors text-sm"
             title="刪除"
           >
             ✕
@@ -84,7 +85,7 @@ export default function SentenceCard({ sentence, wordMap, onUpdateWordStatus, on
       </div>
 
       {/* English text with word-status coloring */}
-      <p className="text-white text-base leading-relaxed mb-1">
+      <p className="text-gray-900 dark:text-white text-base leading-relaxed mb-1">
         {tokens.map((t, i) =>
           t.isWord ? (
             <WordSpan
@@ -92,6 +93,7 @@ export default function SentenceCard({ sentence, wordMap, onUpdateWordStatus, on
               word={t.raw}
               status={wordMap.get(t.raw.toLowerCase())}
               onUpdateWordStatus={onUpdateWordStatus}
+              onRemoveWordStatus={onRemoveWordStatus}
             />
           ) : (
             <span key={i}>{t.raw}</span>
@@ -101,7 +103,7 @@ export default function SentenceCard({ sentence, wordMap, onUpdateWordStatus, on
 
       {/* Chinese translation */}
       {sentence.translation && (
-        <p className="text-white/50 text-sm mb-3">{sentence.translation}</p>
+        <p className="text-gray-500 dark:text-white/50 text-sm mb-3">{sentence.translation}</p>
       )}
 
       {/* Tagged word chips */}

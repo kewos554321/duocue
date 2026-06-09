@@ -7,11 +7,15 @@ interface Props {
   word: string
   status: WordStatus | undefined
   onUpdateWordStatus: (word: string, status: WordStatus) => Promise<void>
+  onRemoveWordStatus: (word: string) => Promise<void>
 }
 
-export default function WordSpan({ word, status, onUpdateWordStatus }: Props) {
+const TOOLTIP_W = 224 // w-56
+const PAD = 8
+
+export default function WordSpan({ word, status, onUpdateWordStatus, onRemoveWordStatus }: Props) {
   const [showTooltip, setShowTooltip] = useState(false)
-  const [pos, setPos] = useState({ x: 0, y: 0 })
+  const [pos, setPos] = useState({ x: 0, y: 0, flip: false })
   const spanRef = useRef<HTMLSpanElement>(null)
   const enterTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -30,7 +34,17 @@ export default function WordSpan({ word, status, onUpdateWordStatus }: Props) {
     enterTimer.current = setTimeout(() => {
       if (spanRef.current) {
         const r = spanRef.current.getBoundingClientRect()
-        setPos({ x: r.left + r.width / 2, y: r.top - 8 })
+        const centerX = r.left + r.width / 2
+        const clampedX = Math.max(
+          PAD + TOOLTIP_W / 2,
+          Math.min(window.innerWidth - PAD - TOOLTIP_W / 2, centerX)
+        )
+        const flip = r.top < 220
+        setPos({
+          x: clampedX,
+          y: flip ? r.bottom + 8 : r.top - 8,
+          flip,
+        })
       }
       setShowTooltip(true)
     }, 100)
@@ -55,13 +69,14 @@ export default function WordSpan({ word, status, onUpdateWordStatus }: Props) {
       </span>
 
       {showTooltip && createPortal(
-        // Portal renders at document.body — no clipping from overflow-y:auto on main
         <div
           style={{
             position: 'fixed',
             left: pos.x,
             top: pos.y,
-            transform: 'translateX(-50%) translateY(-100%)',
+            transform: pos.flip
+              ? 'translateX(-50%)'
+              : 'translateX(-50%) translateY(-100%)',
             zIndex: 9999,
           }}
           onMouseEnter={cancelLeave}
@@ -71,6 +86,7 @@ export default function WordSpan({ word, status, onUpdateWordStatus }: Props) {
             word={word}
             status={status}
             onUpdateWordStatus={onUpdateWordStatus}
+            onRemoveWordStatus={onRemoveWordStatus}
             onClose={() => setShowTooltip(false)}
           />
         </div>,

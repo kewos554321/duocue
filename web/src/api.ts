@@ -35,6 +35,14 @@ export async function deleteSentence(id: number): Promise<void> {
   if (!res.ok) throw new Error(`DELETE /sentences/${id} failed: ${res.status}`)
 }
 
+export async function removeWord(word: string): Promise<void> {
+  const res = await fetch(`${API_ENDPOINT}/words/${encodeURIComponent(word.toLowerCase())}`, {
+    method: 'DELETE',
+    headers: authHeaders,
+  })
+  if (!res.ok) throw new Error(`DELETE /words/${word} failed: ${res.status}`)
+}
+
 export async function patchWordStatus(word: string, status: WordStatus): Promise<void> {
   const res = await fetch(`${API_ENDPOINT}/words/${encodeURIComponent(word.toLowerCase())}`, {
     method: 'PATCH',

@@ -9,10 +9,11 @@ interface Props {
   wordMap: Map<string, WordStatus>
   selectedVideoUrl: string | null
   onUpdateWordStatus: (word: string, status: WordStatus) => Promise<void>
+  onRemoveWordStatus: (word: string) => Promise<void>
   onDeleteSentence: (id: number) => Promise<void>
 }
 
-export default function SentencesPage({ sentences, wordMap, selectedVideoUrl, onUpdateWordStatus, onDeleteSentence }: Props) {
+export default function SentencesPage({ sentences, wordMap, selectedVideoUrl, onUpdateWordStatus, onRemoveWordStatus, onDeleteSentence }: Props) {
   const [filter, setFilter] = useState<Filter>('all')
   const [search, setSearch] = useState('')
 
@@ -53,8 +54,8 @@ export default function SentencesPage({ sentences, wordMap, selectedVideoUrl, on
               onClick={() => setFilter(f)}
               className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
                 filter === f
-                  ? 'bg-white text-black font-medium'
-                  : 'bg-white/10 text-white/60 hover:bg-white/15'
+                  ? 'bg-gray-900 dark:bg-white text-white dark:text-black font-medium'
+                  : 'bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-white/60 hover:bg-gray-200 dark:hover:bg-white/15'
               }`}
             >
               {label}
@@ -66,12 +67,12 @@ export default function SentencesPage({ sentences, wordMap, selectedVideoUrl, on
           placeholder="搜尋句子…"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="flex-1 min-w-40 max-w-xs bg-white/10 rounded-lg px-3 py-1.5 text-sm text-white placeholder-white/30 outline-none focus:bg-white/15 transition-colors"
+          className="flex-1 min-w-40 max-w-xs bg-gray-100 dark:bg-white/10 rounded-lg px-3 py-1.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/30 outline-none focus:bg-gray-200 dark:focus:bg-white/15 transition-colors"
         />
       </div>
 
       {filtered.length === 0 ? (
-        <div className="text-white/30 text-sm">沒有符合的句子</div>
+        <div className="text-gray-400 dark:text-white/30 text-sm">沒有符合的句子</div>
       ) : (
         <div className="flex flex-col gap-4">
           {filtered.map(s => (
@@ -80,6 +81,7 @@ export default function SentencesPage({ sentences, wordMap, selectedVideoUrl, on
               sentence={s}
               wordMap={wordMap}
               onUpdateWordStatus={onUpdateWordStatus}
+              onRemoveWordStatus={onRemoveWordStatus}
               onDelete={onDeleteSentence}
             />
           ))}

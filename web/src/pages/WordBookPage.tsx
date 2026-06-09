@@ -16,13 +16,13 @@ function WordRow({ word, sentences }: WordRowProps) {
   )
 
   return (
-    <div className="bg-[#1C1C1E] rounded-xl p-4 border border-white/10">
+    <div className="bg-white dark:bg-[#1C1C1E] rounded-xl p-4 border border-gray-200 dark:border-white/10">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-baseline gap-2 flex-wrap">
-            <span className="font-semibold text-white text-base">{word.word}</span>
+            <span className="font-semibold text-gray-900 dark:text-white text-base">{word.word}</span>
             {partOfSpeech && (
-              <span className="text-xs text-white/40">{partOfSpeech}</span>
+              <span className="text-xs text-gray-400 dark:text-white/40">{partOfSpeech}</span>
             )}
             <span
               className={`text-xs rounded px-2 py-0.5 ${
@@ -34,13 +34,13 @@ function WordRow({ word, sentences }: WordRowProps) {
               {word.status === 'learning' ? '學習中' : '已學習'}
             </span>
           </div>
-          <div className="text-xs text-white/50 mt-1 leading-relaxed">{definition}</div>
+          <div className="text-xs text-gray-500 dark:text-white/50 mt-1 leading-relaxed">{definition}</div>
         </div>
 
         {matchingSentences.length > 0 && (
           <button
             onClick={() => setExpanded(e => !e)}
-            className="text-xs text-white/40 hover:text-white/70 shrink-0 transition-colors"
+            className="text-xs text-gray-400 dark:text-white/40 hover:text-gray-600 dark:hover:text-white/70 shrink-0 transition-colors"
           >
             {matchingSentences.length} 個句子 {expanded ? '▲' : '▼'}
           </button>
@@ -48,9 +48,9 @@ function WordRow({ word, sentences }: WordRowProps) {
       </div>
 
       {expanded && (
-        <div className="mt-3 pt-3 border-t border-white/10 flex flex-col gap-2">
+        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-white/10 flex flex-col gap-2">
           {matchingSentences.map(s => (
-            <p key={s.id} className="text-sm text-white/70 leading-relaxed">{s.text}</p>
+            <p key={s.id} className="text-sm text-gray-600 dark:text-white/70 leading-relaxed">{s.text}</p>
           ))}
         </div>
       )}
@@ -68,7 +68,7 @@ export default function WordBookPage({ words, sentences }: Props) {
 
   if (markedWords.length === 0) {
     return (
-      <div className="text-white/30 text-sm">
+      <div className="text-gray-400 dark:text-white/30 text-sm">
         還沒有標記的單字。在句子頁面 hover 任何單字可標記學習狀態。
       </div>
     )
@@ -76,7 +76,7 @@ export default function WordBookPage({ words, sentences }: Props) {
 
   return (
     <div>
-      <h2 className="text-white font-semibold text-lg mb-4">
+      <h2 className="text-gray-900 dark:text-white font-semibold text-lg mb-4">
         單字本 ({markedWords.length})
       </h2>
       <div className="flex flex-col gap-3">

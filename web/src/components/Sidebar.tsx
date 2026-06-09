@@ -37,51 +37,51 @@ export default function Sidebar({ sentences, videos, words, page, selectedVideoU
   const learningCount = words.filter(w => w.status === 'learning').length
 
   return (
-    <aside className="w-56 shrink-0 flex flex-col bg-[#1C1C1E] border-r border-white/10 overflow-y-auto">
+    <aside className="w-56 shrink-0 flex flex-col bg-white dark:bg-[#1C1C1E] border-r border-gray-200 dark:border-white/10 overflow-y-auto">
       {/* Main nav */}
       <nav className="px-2 pt-3 flex flex-col gap-1">
         <button
           onClick={() => { onSelectPage('sentences'); onSelectVideo(null) }}
           className={`w-full text-left px-3 py-2 rounded-lg text-sm flex justify-between items-center transition-colors ${
             page === 'sentences' && selectedVideoUrl === null
-              ? 'bg-white/10 text-white'
-              : 'text-white/60 hover:text-white hover:bg-white/5'
+              ? 'bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white'
+              : 'text-gray-500 dark:text-white/60 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5'
           }`}
         >
           <span>📖 全部句子</span>
-          <span className="text-xs bg-white/10 rounded px-1.5 py-0.5">{sentences.length}</span>
+          <span className="text-xs bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-white/50 rounded px-1.5 py-0.5">{sentences.length}</span>
         </button>
 
         <button
           onClick={() => onSelectPage('words')}
           className={`w-full text-left px-3 py-2 rounded-lg text-sm flex justify-between items-center transition-colors ${
             page === 'words'
-              ? 'bg-white/10 text-white'
-              : 'text-white/60 hover:text-white hover:bg-white/5'
+              ? 'bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white'
+              : 'text-gray-500 dark:text-white/60 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5'
           }`}
         >
           <span>📝 單字本</span>
-          <span className="text-xs bg-white/10 rounded px-1.5 py-0.5">{learningCount}</span>
+          <span className="text-xs bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-white/50 rounded px-1.5 py-0.5">{learningCount}</span>
         </button>
 
         <button
           disabled
-          className="w-full text-left px-3 py-2 rounded-lg text-sm flex justify-between items-center text-white/25 cursor-not-allowed"
+          className="w-full text-left px-3 py-2 rounded-lg text-sm flex justify-between items-center text-gray-300 dark:text-white/25 cursor-not-allowed"
         >
           <span>🧠 練習</span>
-          <span className="text-xs bg-white/5 rounded px-1.5 py-0.5">未來</span>
+          <span className="text-xs bg-gray-100 dark:bg-white/5 rounded px-1.5 py-0.5">未來</span>
         </button>
       </nav>
 
       {/* Video groups */}
       {Object.keys(platformGroups).length > 0 && (
         <div className="mt-4 px-2">
-          <div className="px-3 py-1 text-xs text-white/30 uppercase tracking-wider mb-1">依影片</div>
+          <div className="px-3 py-1 text-xs text-gray-400 dark:text-white/30 uppercase tracking-wider mb-1">依影片</div>
           {Object.entries(platformGroups).map(([platform, vids]) => (
             <div key={platform}>
               <button
                 onClick={() => togglePlatform(platform)}
-                className="w-full text-left px-3 py-2 text-sm text-white/50 hover:text-white hover:bg-white/5 rounded-lg flex justify-between items-center transition-colors"
+                className="w-full text-left px-3 py-2 text-sm text-gray-400 dark:text-white/50 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5 rounded-lg flex justify-between items-center transition-colors"
               >
                 <span>{PLATFORM_LABEL[platform] ?? platform}</span>
                 <span className="text-xs">{expandedPlatforms.has(platform) ? '▲' : '▼'}</span>
@@ -92,12 +92,12 @@ export default function Sidebar({ sentences, videos, words, page, selectedVideoU
                   onClick={() => { onSelectPage('sentences'); onSelectVideo(v.url) }}
                   className={`w-full text-left px-4 py-1.5 text-xs rounded-lg flex justify-between items-center transition-colors ${
                     selectedVideoUrl === v.url
-                      ? 'bg-white/10 text-white'
-                      : 'text-white/40 hover:text-white hover:bg-white/5'
+                      ? 'bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white'
+                      : 'text-gray-400 dark:text-white/40 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5'
                   }`}
                 >
                   <span className="truncate">{v.title ?? v.url.replace(/^https?:\/\//, '').slice(0, 32) + '…'}</span>
-                  <span className="ml-1 shrink-0 text-white/30">{v.sentenceCount}</span>
+                  <span className="ml-1 shrink-0 text-gray-300 dark:text-white/30">{v.sentenceCount}</span>
                 </button>
               ))}
             </div>
@@ -106,13 +106,13 @@ export default function Sidebar({ sentences, videos, words, page, selectedVideoU
       )}
 
       {/* Account (hardcoded MVP) */}
-      <div className="mt-auto px-4 py-4 border-t border-white/10 flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-sm font-bold shrink-0">
+      <div className="mt-auto px-4 py-4 border-t border-gray-200 dark:border-white/10 flex items-center gap-3">
+        <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-sm font-bold shrink-0 text-white">
           W
         </div>
         <div className="min-w-0">
-          <div className="text-sm text-white truncate">Wei Chieh</div>
-          <div className="text-xs text-white/40 truncate">kewos554321@gmail.com</div>
+          <div className="text-sm text-gray-900 dark:text-white truncate">Wei Chieh</div>
+          <div className="text-xs text-gray-400 dark:text-white/40 truncate">kewos554321@gmail.com</div>
         </div>
       </div>
     </aside>
