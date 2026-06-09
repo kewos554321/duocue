@@ -15,7 +15,9 @@ CREATE TABLE IF NOT EXISTS sentences (
 );
 
 CREATE TABLE IF NOT EXISTS words (
-  id     INTEGER PRIMARY KEY AUTOINCREMENT,
-  word   TEXT NOT NULL UNIQUE,
-  status TEXT NOT NULL DEFAULT 'learning'
+  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+  word            TEXT NOT NULL UNIQUE,
+  status          TEXT NOT NULL DEFAULT 'learning',
+  next_review_at  INTEGER DEFAULT NULL,
+  interval_days   INTEGER DEFAULT 1
 );
