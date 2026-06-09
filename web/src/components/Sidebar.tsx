@@ -38,13 +38,8 @@ export default function Sidebar({ sentences, videos, words, page, selectedVideoU
 
   return (
     <aside className="w-56 shrink-0 flex flex-col bg-[#1C1C1E] border-r border-white/10 overflow-y-auto">
-      {/* Logo */}
-      <div className="px-4 py-5 text-white font-bold text-lg tracking-tight select-none">
-        ● DuoCue
-      </div>
-
       {/* Main nav */}
-      <nav className="px-2 flex flex-col gap-1">
+      <nav className="px-2 pt-3 flex flex-col gap-1">
         <button
           onClick={() => { onSelectPage('sentences'); onSelectVideo(null) }}
           className={`w-full text-left px-3 py-2 rounded-lg text-sm flex justify-between items-center transition-colors ${

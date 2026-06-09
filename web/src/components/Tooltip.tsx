@@ -17,7 +17,7 @@ export default function Tooltip({ word, status, onUpdateWordStatus, onClose }: P
   }
 
   return (
-    <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 bg-[#2C2C2E] border border-white/15 rounded-xl shadow-xl p-3">
+    <div className="w-56 bg-[#2C2C2E] border border-white/15 rounded-xl shadow-xl p-3">
       <div className="flex items-baseline gap-2 mb-1">
         <span className="font-semibold text-white">{word}</span>
         {partOfSpeech && <span className="text-xs text-white/40">{partOfSpeech}</span>}
