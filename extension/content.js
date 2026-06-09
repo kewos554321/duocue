@@ -828,6 +828,7 @@ document.addEventListener('keydown', async (e) => {
   const tag = document.activeElement?.tagName
   if (tag === 'INPUT' || tag === 'TEXTAREA' || document.activeElement?.isContentEditable) return
   if (!lastEnglish) return
+  if (!_expApiEndpoint || !_expApiKey) return
 
   const platform = await detectPlatform()
   const video = document.querySelector('video')
