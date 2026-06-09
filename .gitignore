@@ -3,3 +3,5 @@
 *.zip
 subtitle-finder.txt
 api/.dev.vars
+node_modules/
+web/dist/
