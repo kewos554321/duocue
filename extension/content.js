@@ -75,6 +75,34 @@ chrome.storage.local.get('wordStatus', ({ wordStatus: ws }) => {
   if (ws) _wordStatus = ws
 })
 
+// ── Experimental mode ──────────────────────────────────────────────────────
+let experimentalEnabled = false
+let _expApiEndpoint = ''
+let _expApiKey = ''
+
+chrome.storage.local.get(['experimentalMode', 'apiEndpoint', 'apiKey'], ({ experimentalMode, apiEndpoint, apiKey }) => {
+  experimentalEnabled = !!experimentalMode
+  _expApiEndpoint = apiEndpoint || ''
+  _expApiKey = apiKey || ''
+  if (experimentalEnabled && _expApiEndpoint && _expApiKey) {
+    fetchWordCache()
+  }
+})
+
+async function fetchWordCache() {
+  try {
+    const res = await fetch(`${_expApiEndpoint}/words`, {
+      headers: { Authorization: `Bearer ${_expApiKey}` }
+    })
+    if (!res.ok) return
+    const { words } = await res.json()
+    words.forEach(({ word, status }) => { _wordStatus[word] = status })
+    console.log('[DuoCue] word cache loaded:', words.length, 'words')
+  } catch (e) {
+    console.warn('[DuoCue] failed to fetch word cache', e)
+  }
+}
+
 let displayMode = 'both'
 chrome.storage.local.get('displayMode', ({ displayMode: m }) => {
   if (m) displayMode = m
@@ -133,6 +161,9 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
   }
   if (changes.wordStatus) {
     _wordStatus = changes.wordStatus.newValue ?? {}
+  }
+  if (changes.experimentalMode) {
+    experimentalEnabled = !!changes.experimentalMode.newValue
   }
 })
 
