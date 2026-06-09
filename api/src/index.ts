@@ -11,6 +11,7 @@ const app = new Hono<{ Bindings: Bindings }>()
 app.use('*', cors())
 
 app.use('*', async (c, next) => {
+  if (c.req.method === 'OPTIONS') return next()
   const auth = c.req.header('Authorization')
   if (!auth || auth !== `Bearer ${c.env.API_KEY}`) {
     return c.json({ error: 'Unauthorized' }, 401)
@@ -19,13 +20,12 @@ app.use('*', async (c, next) => {
 })
 
 app.post('/sentences', async (c) => {
-  const body = await c.req.json<{
-    platform: string
-    videoUrl: string
-    text: string
-    translation?: string
-    timestampS: number
-  }>()
+  let body: { platform: string; videoUrl: string; text: string; translation?: string; timestampS: number }
+  try {
+    body = await c.req.json()
+  } catch {
+    return c.json({ error: 'Invalid JSON body' }, 400)
+  }
 
   if (!body.platform || !body.videoUrl || !body.text || body.timestampS == null) {
     return c.json({ error: 'platform, videoUrl, text, timestampS are required' }, 400)
@@ -83,7 +83,13 @@ app.get('/words', async (c) => {
 
 app.patch('/words/:word', async (c) => {
   const word = c.req.param('word').toLowerCase()
-  const { status } = await c.req.json<{ status: string }>()
+  let parsedBody: { status?: string }
+  try {
+    parsedBody = await c.req.json()
+  } catch {
+    return c.json({ error: 'Invalid JSON body' }, 400)
+  }
+  const status = parsedBody.status ?? ''
 
   if (status !== 'learning' && status !== 'learned') {
     return c.json({ error: 'status must be "learning" or "learned"' }, 400)
