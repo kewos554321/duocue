@@ -102,7 +102,7 @@ MVP 硬寫死設定，不做 auth，未來接 OAuth 時替換此區塊。
 ┌──────────────────────────┐
 │  thought  verb           │
 │  ● 學習中                │
-│  思考；認為；以為          │
+│  to think; to consider   │
 │                          │
 │  [📙 學習中]  [✅ 已學習] │
 └──────────────────────────┘
@@ -110,7 +110,7 @@ MVP 硬寫死設定，不做 auth，未來接 OAuth 時替換此區塊。
 
 - tooltip 出現：mouseenter 後 100ms delay（防抖）
 - tooltip 消失：mouseleave 後 200ms delay（讓使用者可以移到 tooltip 上點按鈕）
-- 中文意思：呼叫 `GET https://api.dictionaryapi.dev/api/v2/entries/en/{word}` 取得（已在 manifest host_permissions 中）；若失敗或無資料，顯示「—」
+- 英文意思：呼叫 `GET https://api.dictionaryapi.dev/api/v2/entries/en/{word}` 取得第一個 definition；若失敗或無資料，顯示「—」（免費公開 API，無需 API key，CORS 友好）
 - 點「學習中」或「已學習」→ 呼叫 `PATCH /words/{word}`，tooltip 即時更新，句子卡片單字顏色即時更新
 
 ---
