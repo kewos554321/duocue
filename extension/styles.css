@@ -167,3 +167,33 @@
 
 .duocue-tt-btn--learn:hover { background: rgba(99, 102, 241, 0.28); }
 .duocue-tt-btn--know:hover  { background: rgba(74, 222, 128, 0.25); }
+
+#duocue-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 100002;
+  background: rgba(28, 28, 30, 0.95);
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none;
+}
+
+#duocue-toast.duocue-toast-show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+#duocue-toast.duocue-toast-hide {
+  opacity: 0;
+  transform: translateY(8px);
+}

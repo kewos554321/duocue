@@ -802,3 +802,54 @@ history.replaceState = (...args) => { _origReplace(...args); tryInit() }
 window.addEventListener('popstate', tryInit)
 
 tryInit()
+
+// ── Experimental: toast notification ──────────────────────────────────────
+function showToast(message) {
+  let toast = document.getElementById('duocue-toast')
+  if (!toast) {
+    toast = document.createElement('div')
+    toast.id = 'duocue-toast'
+    document.body.appendChild(toast)
+  }
+  toast.textContent = message
+  toast.classList.remove('duocue-toast-hide')
+  toast.classList.add('duocue-toast-show')
+  clearTimeout(toast._timer)
+  toast._timer = setTimeout(() => {
+    toast.classList.remove('duocue-toast-show')
+    toast.classList.add('duocue-toast-hide')
+  }, 1500)
+}
+
+// ── Experimental: S key — save current subtitle sentence ──────────────────
+document.addEventListener('keydown', async (e) => {
+  if (!experimentalEnabled) return
+  if (e.key !== 's' && e.key !== 'S') return
+  const tag = document.activeElement?.tagName
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || document.activeElement?.isContentEditable) return
+  if (!lastEnglish) return
+
+  const platform = await detectPlatform()
+  const video = document.querySelector('video')
+  const timestampS = video ? Math.floor(video.currentTime) : 0
+
+  try {
+    const res = await fetch(`${_expApiEndpoint}/sentences`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${_expApiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        platform: platform?.id ?? 'unknown',
+        videoUrl: location.href,
+        text: lastEnglish,
+        translation: lastChinese ?? null,
+        timestampS
+      })
+    })
+    showToast(res.ok ? '✓ 已儲存' : '× 儲存失敗')
+  } catch {
+    showToast('× 儲存失敗')
+  }
+})
