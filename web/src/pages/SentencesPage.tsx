@@ -122,18 +122,90 @@ export default function SentencesPage({ sentences, wordMap, selectedVideoUrl, on
           沒有符合的句子
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
-          {paginated.map(s => (
-            <SentenceCard
-              key={s.id}
-              sentence={s}
-              wordMap={wordMap}
-              onUpdateWordStatus={onUpdateWordStatus}
-              onRemoveWordStatus={onRemoveWordStatus}
-              onDelete={onDeleteSentence}
-            />
-          ))}
-        </div>
+        <>
+          <div className="flex flex-col gap-3">
+            {paginated.map(s => (
+              <SentenceCard
+                key={s.id}
+                sentence={s}
+                wordMap={wordMap}
+                onUpdateWordStatus={onUpdateWordStatus}
+                onRemoveWordStatus={onRemoveWordStatus}
+                onDelete={onDeleteSentence}
+              />
+            ))}
+          </div>
+
+          {filtered.length > 0 && totalPages > 1 && (
+            <div
+              className="mt-6 pt-5 flex flex-col items-center gap-2.5"
+              style={{ borderTop: '1px solid var(--separator)' }}
+            >
+              {/* Page buttons */}
+              <div className="flex items-center gap-1">
+                {/* Prev */}
+                <button
+                  onClick={() => setCurrentPage(p => p - 1)}
+                  disabled={currentPage === 1}
+                  className="min-w-[32px] h-8 rounded-lg flex items-center justify-center text-[18px] transition-colors px-2"
+                  style={{
+                    color: 'var(--ios-blue)',
+                    background: 'transparent',
+                    opacity: currentPage === 1 ? 0.3 : 1,
+                    pointerEvents: currentPage === 1 ? 'none' : 'auto',
+                  }}
+                >
+                  ‹
+                </button>
+
+                {getPageNumbers(currentPage, totalPages).map((p, i) =>
+                  p === '…' ? (
+                    <span
+                      key={`dots-${i}`}
+                      className="px-1 text-[14px]"
+                      style={{ color: 'var(--text-secondary)' }}
+                    >
+                      …
+                    </span>
+                  ) : (
+                    <button
+                      key={p}
+                      onClick={() => setCurrentPage(p as number)}
+                      className="min-w-[32px] h-8 rounded-lg flex items-center justify-center text-[14px] transition-colors px-2"
+                      style={{
+                        background: currentPage === p ? 'var(--ios-blue)' : 'transparent',
+                        color: currentPage === p ? 'white' : 'var(--text-secondary)',
+                        fontWeight: currentPage === p ? 600 : 400,
+                      }}
+                    >
+                      {p}
+                    </button>
+                  )
+                )}
+
+                {/* Next */}
+                <button
+                  onClick={() => setCurrentPage(p => p + 1)}
+                  disabled={currentPage === totalPages}
+                  className="min-w-[32px] h-8 rounded-lg flex items-center justify-center text-[18px] transition-colors px-2"
+                  style={{
+                    color: 'var(--ios-blue)',
+                    background: 'transparent',
+                    opacity: currentPage === totalPages ? 0.3 : 1,
+                    pointerEvents: currentPage === totalPages ? 'none' : 'auto',
+                  }}
+                >
+                  ›
+                </button>
+              </div>
+
+              {/* Count label */}
+              <div className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+                顯示 {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filtered.length)} / {filtered.length} 筆
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   )
