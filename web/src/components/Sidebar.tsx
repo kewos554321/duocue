@@ -18,13 +18,14 @@ interface Props {
   sentences: ApiSentence[]
   videos: ApiVideo[]
   words: ApiWord[]
-  page: 'sentences' | 'words'
+  practiceQueueCount: number
+  page: 'sentences' | 'words' | 'practice'
   selectedVideoUrl: string | null
-  onSelectPage: (p: 'sentences' | 'words') => void
+  onSelectPage: (p: 'sentences' | 'words' | 'practice') => void
   onSelectVideo: (url: string | null) => void
 }
 
-export default function Sidebar({ sentences, videos, words, page, selectedVideoUrl, onSelectPage, onSelectVideo }: Props) {
+export default function Sidebar({ sentences, videos, words, practiceQueueCount, page, selectedVideoUrl, onSelectPage, onSelectVideo }: Props) {
   const [expandedPlatforms, setExpandedPlatforms] = useState<Set<string>>(new Set())
 
   const togglePlatform = (platform: string) => {
@@ -100,20 +101,36 @@ export default function Sidebar({ sentences, videos, words, page, selectedVideoU
         </button>
 
         <button
-          disabled
-          className={`${navBase} opacity-30`}
-          style={{ color: 'var(--text-secondary)' }}
+          onClick={() => onSelectPage('practice')}
+          className={`${navBase} ${page === 'practice' ? navActive : ''}`}
+          style={{
+            color: page === 'practice' ? 'var(--ios-blue)' : 'var(--text-primary)',
+            background: page === 'practice' ? 'rgba(0,122,255,0.1)' : 'transparent',
+          }}
+          onMouseEnter={e => {
+            if (page !== 'practice')
+              (e.currentTarget as HTMLButtonElement).style.background = 'rgba(120,120,128,0.08)'
+          }}
+          onMouseLeave={e => {
+            if (page !== 'practice')
+              (e.currentTarget as HTMLButtonElement).style.background = 'transparent'
+          }}
         >
           <span className="flex items-center gap-2.5">
             <Sparkles size={16} strokeWidth={1.8} />
             練習
           </span>
-          <span
-            className="text-[11px] rounded-md px-1.5 py-0.5"
-            style={{ background: 'rgba(120,120,128,0.12)', color: 'var(--text-secondary)' }}
-          >
-            即將推出
-          </span>
+          {practiceQueueCount > 0 && (
+            <span
+              className="text-[11px] rounded-full px-1.5 py-0.5 min-w-[20px] text-center tabular-nums"
+              style={{
+                background: page === 'practice' ? 'rgba(0,122,255,0.15)' : 'rgba(255,149,0,0.2)',
+                color: page === 'practice' ? 'var(--ios-blue)' : 'var(--ios-orange)',
+              }}
+            >
+              {practiceQueueCount}
+            </span>
+          )}
         </button>
       </nav>
 

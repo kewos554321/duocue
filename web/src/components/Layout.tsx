@@ -8,14 +8,15 @@ interface Props {
   sentences: ApiSentence[]
   videos: ApiVideo[]
   words: ApiWord[]
-  page: 'sentences' | 'words'
+  practiceQueueCount: number
+  page: 'sentences' | 'words' | 'practice'
   selectedVideoUrl: string | null
-  onSelectPage: (p: 'sentences' | 'words') => void
+  onSelectPage: (p: 'sentences' | 'words' | 'practice') => void
   onSelectVideo: (url: string | null) => void
   children: ReactNode
 }
 
-export default function Layout({ sentences, videos, words, page, selectedVideoUrl, onSelectPage, onSelectVideo, children }: Props) {
+export default function Layout({ sentences, videos, words, practiceQueueCount, page, selectedVideoUrl, onSelectPage, onSelectVideo, children }: Props) {
   const { theme, toggleTheme } = useTheme()
 
   return (
@@ -53,6 +54,7 @@ export default function Layout({ sentences, videos, words, page, selectedVideoUr
           sentences={sentences}
           videos={videos}
           words={words}
+          practiceQueueCount={practiceQueueCount}
           page={page}
           selectedVideoUrl={selectedVideoUrl}
           onSelectPage={onSelectPage}

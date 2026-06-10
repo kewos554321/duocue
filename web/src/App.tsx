@@ -2,25 +2,28 @@ import { useState, useEffect } from 'react'
 import Layout from './components/Layout'
 import SentencesPage from './pages/SentencesPage'
 import WordBookPage from './pages/WordBookPage'
-import { fetchSentences, fetchVideos, fetchWords, patchWordStatus, deleteSentence, removeWord } from './api'
-import type { ApiSentence, ApiVideo, ApiWord, WordStatus } from './types'
+import PracticePage from './pages/PracticePage'
+import { fetchSentences, fetchVideos, fetchWords, fetchPracticeQueue, patchWordStatus, deleteSentence, removeWord, postPracticeReview } from './api'
+import type { ApiSentence, ApiVideo, ApiWord, WordStatus, PracticeWord } from './types'
 
 export default function App() {
   const [sentences, setSentences] = useState<ApiSentence[]>([])
   const [videos, setVideos] = useState<ApiVideo[]>([])
   const [words, setWords] = useState<ApiWord[]>([])
+  const [practiceQueue, setPracticeQueue] = useState<PracticeWord[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const [page, setPage] = useState<'sentences' | 'words'>('sentences')
+  const [page, setPage] = useState<'sentences' | 'words' | 'practice'>('sentences')
   const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null)
 
   useEffect(() => {
-    Promise.all([fetchSentences(), fetchVideos(), fetchWords()])
-      .then(([s, v, w]) => {
+    Promise.all([fetchSentences(), fetchVideos(), fetchWords(), fetchPracticeQueue()])
+      .then(([s, v, w, q]) => {
         setSentences(s)
         setVideos(v)
         setWords(w)
+        setPracticeQueue(q)
       })
       .catch(e => setError(String(e)))
       .finally(() => setLoading(false))
@@ -45,11 +48,16 @@ export default function App() {
     )
   }
 
+  const handleReview = async (word: string, result: 'know' | 'unknown') => {
+    await postPracticeReview(word, result)
+    setPracticeQueue(prev => prev.filter(w => w.word !== word))
+  }
+
   const wordMap = new Map(words.map(w => [w.word, w.status]))
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen" style={{ background: 'var(--bg-primary)', color: 'var(--text-secondary)', fontSize: '14px' }}>
+      <div className="flex items-center justify-center h-screen bg-black text-white/40 text-sm">
         載入中…
       </div>
     )
@@ -57,7 +65,7 @@ export default function App() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-screen" style={{ background: 'var(--bg-primary)', color: 'var(--ios-red)', fontSize: '14px' }}>
+      <div className="flex items-center justify-center h-screen bg-black text-red-400 text-sm">
         {error}
       </div>
     )
@@ -68,6 +76,7 @@ export default function App() {
       sentences={sentences}
       videos={videos}
       words={words}
+      practiceQueueCount={practiceQueue.length}
       page={page}
       selectedVideoUrl={selectedVideoUrl}
       onSelectPage={setPage}
@@ -82,10 +91,15 @@ export default function App() {
           onRemoveWordStatus={handleRemoveWord}
           onDeleteSentence={handleDeleteSentence}
         />
-      ) : (
+      ) : page === 'words' ? (
         <WordBookPage
           words={words}
           sentences={sentences}
+        />
+      ) : (
+        <PracticePage
+          queue={practiceQueue}
+          onReview={handleReview}
         />
       )}
     </Layout>
