@@ -1,7 +1,9 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Search } from 'lucide-react'
 import SentenceCard from '../components/SentenceCard'
 import type { ApiSentence, WordStatus } from '../types'
+
+const PAGE_SIZE = 25
 
 type Filter = 'all' | 'learning' | 'unmarked'
 
@@ -17,6 +19,11 @@ interface Props {
 export default function SentencesPage({ sentences, wordMap, selectedVideoUrl, onUpdateWordStatus, onRemoveWordStatus, onDeleteSentence }: Props) {
   const [filter, setFilter] = useState<Filter>('all')
   const [search, setSearch] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [filter, search, selectedVideoUrl])
 
   const filtered = useMemo(() => {
     let result = selectedVideoUrl !== null
@@ -42,6 +49,16 @@ export default function SentencesPage({ sentences, wordMap, selectedVideoUrl, on
 
     return result
   }, [sentences, selectedVideoUrl, filter, search, wordMap])
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
+  const paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+
+  function getPageNumbers(current: number, total: number): (number | '…')[] {
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
+    if (current <= 4) return [1, 2, 3, 4, 5, '…', total]
+    if (current >= total - 3) return [1, '…', total - 4, total - 3, total - 2, total - 1, total]
+    return [1, '…', current - 1, current, current + 1, '…', total]
+  }
 
   const FILTERS: [Filter, string][] = [['all', '全部'], ['learning', '學習中'], ['unmarked', '未標記']]
 
@@ -103,7 +120,7 @@ export default function SentencesPage({ sentences, wordMap, selectedVideoUrl, on
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          {filtered.map(s => (
+          {paginated.map(s => (
             <SentenceCard
               key={s.id}
               sentence={s}
