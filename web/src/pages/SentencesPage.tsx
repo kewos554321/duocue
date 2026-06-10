@@ -1,40 +1,63 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { Search } from 'lucide-react'
 import SentenceCard from '../components/SentenceCard'
-import type { ApiSentence, WordStatus } from '../types'
-
-const PAGE_SIZE = 25
-
-function getPageNumbers(current: number, total: number): (number | '…')[] {
-  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
-  if (current <= 4) return [1, 2, 3, 4, 5, '…', total]
-  if (current >= total - 3) return [1, '…', total - 4, total - 3, total - 2, total - 1, total]
-  return [1, '…', current - 1, current, current + 1, '…', total]
-}
+import type { ApiSentence, ApiVideo, WordStatus } from '../types'
 
 type Filter = 'all' | 'learning' | 'unmarked'
 
+const PLATFORM_LABEL: Record<string, string> = {
+  netflix: 'Netflix',
+  hbomax: 'HBO Max',
+  youtube: 'YouTube',
+}
+
+const PLATFORM_COLOR: Record<string, string> = {
+  netflix: '#E50914',
+  hbomax: '#5822B4',
+  youtube: '#FF0000',
+}
+
+const PLATFORM_BG_ACTIVE: Record<string, string> = {
+  netflix: 'rgba(229,9,20,0.1)',
+  hbomax: 'rgba(88,34,180,0.1)',
+  youtube: 'rgba(255,0,0,0.1)',
+}
+
+const PLATFORM_BORDER_ACTIVE: Record<string, string> = {
+  netflix: 'rgba(229,9,20,0.37)',
+  hbomax: 'rgba(88,34,180,0.37)',
+  youtube: 'rgba(255,0,0,0.37)',
+}
+
 interface Props {
   sentences: ApiSentence[]
+  videos: ApiVideo[]
   wordMap: Map<string, WordStatus>
-  selectedVideoUrl: string | null
   onUpdateWordStatus: (word: string, status: WordStatus) => Promise<void>
   onRemoveWordStatus: (word: string) => Promise<void>
   onDeleteSentence: (id: number) => Promise<void>
 }
 
-export default function SentencesPage({ sentences, wordMap, selectedVideoUrl, onUpdateWordStatus, onRemoveWordStatus, onDeleteSentence }: Props) {
+export default function SentencesPage({ sentences, videos, wordMap, onUpdateWordStatus, onRemoveWordStatus, onDeleteSentence }: Props) {
   const [filter, setFilter] = useState<Filter>('all')
   const [search, setSearch] = useState('')
-  const [currentPage, setCurrentPage] = useState(1)
+  const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null)
+  const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null)
 
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [filter, search, selectedVideoUrl])
+  const platformGroups = useMemo(
+    () => videos.reduce<Record<string, ApiVideo[]>>((acc, v) => {
+      if (!acc[v.platform]) acc[v.platform] = []
+      acc[v.platform].push(v)
+      return acc
+    }, {}),
+    [videos]
+  )
 
   const filtered = useMemo(() => {
     let result = selectedVideoUrl !== null
       ? sentences.filter(s => s.videoUrl === selectedVideoUrl)
+      : selectedPlatform !== null
+      ? sentences.filter(s => s.platform === selectedPlatform)
       : sentences
 
     if (filter === 'learning') {
@@ -55,21 +78,92 @@ export default function SentencesPage({ sentences, wordMap, selectedVideoUrl, on
     }
 
     return result
-  }, [sentences, selectedVideoUrl, filter, search, wordMap])
-
-  const totalPages = useMemo(() => Math.ceil(filtered.length / PAGE_SIZE), [filtered])
-  const paginated = useMemo(
-    () => filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
-    [filtered, currentPage]
-  )
+  }, [sentences, selectedPlatform, selectedVideoUrl, filter, search, wordMap])
 
   const FILTERS: [Filter, string][] = [['all', '全部'], ['learning', '學習中'], ['unmarked', '未標記']]
 
+  const selectPlatform = (p: string | null) => {
+    setSelectedPlatform(p)
+    setSelectedVideoUrl(null)
+  }
+
   return (
     <div>
-      {/* Controls row */}
+      {/* Controls row 1: platform chips + video dropdown */}
+      {Object.keys(platformGroups).length > 0 && (
+        <div className="flex items-center gap-2 mb-3 flex-wrap">
+          {/* 全部 chip */}
+          <button
+            onClick={() => selectPlatform(null)}
+            className="flex items-center px-3 py-1 rounded-full text-[12px] border transition-all duration-150"
+            style={{
+              background: selectedPlatform === null ? 'rgba(0,122,255,0.1)' : 'rgba(120,120,128,0.12)',
+              color: selectedPlatform === null ? 'var(--ios-blue)' : 'var(--text-secondary)',
+              borderColor: selectedPlatform === null ? 'rgba(0,122,255,0.37)' : 'rgba(120,120,128,0.2)',
+            }}
+          >
+            全部
+          </button>
+
+          {/* Per-platform chips */}
+          {Object.keys(platformGroups).map(p => {
+            const active = selectedPlatform === p
+            return (
+              <button
+                key={p}
+                onClick={() => active ? selectPlatform(null) : selectPlatform(p)}
+                className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] border transition-all duration-150"
+                style={{
+                  background: active ? (PLATFORM_BG_ACTIVE[p] ?? 'rgba(120,120,128,0.12)') : 'rgba(120,120,128,0.12)',
+                  color: active ? (PLATFORM_COLOR[p] ?? 'var(--text-secondary)') : 'var(--text-secondary)',
+                  borderColor: active ? (PLATFORM_BORDER_ACTIVE[p] ?? 'rgba(120,120,128,0.2)') : 'rgba(120,120,128,0.2)',
+                }}
+              >
+                <span
+                  className="w-2 h-2 rounded-full shrink-0"
+                  style={{ background: PLATFORM_COLOR[p] ?? '#888' }}
+                />
+                {PLATFORM_LABEL[p] ?? p}
+                {active && <span className="opacity-50 text-[10px] ml-0.5">✕</span>}
+              </button>
+            )
+          })}
+
+          {/* Divider + video dropdown — only when a platform is selected */}
+          {selectedPlatform !== null && (
+            <>
+              <div
+                className="w-px h-4 shrink-0"
+                style={{ background: 'var(--separator)' }}
+              />
+              <select
+                value={selectedVideoUrl ?? ''}
+                onChange={e => setSelectedVideoUrl(e.target.value || null)}
+                className="px-3 py-1 rounded-lg text-[12px] outline-none cursor-pointer"
+                style={{
+                  background: 'rgba(120,120,128,0.12)',
+                  color: selectedVideoUrl
+                    ? (PLATFORM_COLOR[selectedPlatform] ?? 'var(--text-primary)')
+                    : 'var(--text-secondary)',
+                  border: `1px solid ${selectedVideoUrl
+                    ? (PLATFORM_BORDER_ACTIVE[selectedPlatform] ?? 'rgba(120,120,128,0.2)')
+                    : 'rgba(120,120,128,0.2)'}`,
+                }}
+              >
+                <option value="">所有影片</option>
+                {(platformGroups[selectedPlatform] ?? []).map(v => (
+                  <option key={v.url} value={v.url}>
+                    {v.title ?? v.url.replace(/^https?:\/\//, '').slice(0, 30)}
+                  </option>
+                ))}
+              </select>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Controls row 2: word status filter + search */}
       <div className="flex items-center gap-3 mb-6 flex-wrap">
-        {/* iOS-style segmented control */}
         <div
           className="flex rounded-lg p-0.5"
           style={{ background: 'rgba(120,120,128,0.12)' }}
@@ -91,7 +185,6 @@ export default function SentencesPage({ sentences, wordMap, selectedVideoUrl, on
           ))}
         </div>
 
-        {/* Search input */}
         <div className="relative flex-1 min-w-40 max-w-xs">
           <Search
             size={14}
@@ -122,90 +215,18 @@ export default function SentencesPage({ sentences, wordMap, selectedVideoUrl, on
           沒有符合的句子
         </div>
       ) : (
-        <>
-          <div className="flex flex-col gap-3">
-            {paginated.map(s => (
-              <SentenceCard
-                key={s.id}
-                sentence={s}
-                wordMap={wordMap}
-                onUpdateWordStatus={onUpdateWordStatus}
-                onRemoveWordStatus={onRemoveWordStatus}
-                onDelete={onDeleteSentence}
-              />
-            ))}
-          </div>
-
-          {totalPages > 1 && (
-            <div
-              className="mt-6 pt-5 flex flex-col items-center gap-2.5"
-              style={{ borderTop: '1px solid var(--separator)' }}
-            >
-              {/* Page buttons */}
-              <div className="flex items-center gap-1">
-                {/* Prev */}
-                <button
-                  onClick={() => setCurrentPage(p => p - 1)}
-                  disabled={currentPage === 1}
-                  className="min-w-[32px] h-8 rounded-lg flex items-center justify-center text-[18px] transition-colors px-2"
-                  style={{
-                    color: 'var(--ios-blue)',
-                    background: 'transparent',
-                    opacity: currentPage === 1 ? 0.3 : 1,
-                    pointerEvents: currentPage === 1 ? 'none' : 'auto',
-                  }}
-                >
-                  ‹
-                </button>
-
-                {getPageNumbers(currentPage, totalPages).map((p, i) =>
-                  p === '…' ? (
-                    <span
-                      key={`dots-${i}`}
-                      className="px-1 text-[14px]"
-                      style={{ color: 'var(--text-secondary)' }}
-                    >
-                      …
-                    </span>
-                  ) : (
-                    <button
-                      key={p}
-                      onClick={() => setCurrentPage(p as number)}
-                      className="min-w-[32px] h-8 rounded-lg flex items-center justify-center text-[14px] transition-colors px-2"
-                      style={{
-                        background: currentPage === p ? 'var(--ios-blue)' : 'transparent',
-                        color: currentPage === p ? 'white' : 'var(--text-secondary)',
-                        fontWeight: currentPage === p ? 600 : 400,
-                      }}
-                    >
-                      {p}
-                    </button>
-                  )
-                )}
-
-                {/* Next */}
-                <button
-                  onClick={() => setCurrentPage(p => p + 1)}
-                  disabled={currentPage === totalPages}
-                  className="min-w-[32px] h-8 rounded-lg flex items-center justify-center text-[18px] transition-colors px-2"
-                  style={{
-                    color: 'var(--ios-blue)',
-                    background: 'transparent',
-                    opacity: currentPage === totalPages ? 0.3 : 1,
-                    pointerEvents: currentPage === totalPages ? 'none' : 'auto',
-                  }}
-                >
-                  ›
-                </button>
-              </div>
-
-              {/* Count label */}
-              <div className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>
-                顯示 {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filtered.length)} / {filtered.length} 筆
-              </div>
-            </div>
-          )}
-        </>
+        <div className="flex flex-col gap-3">
+          {filtered.map(s => (
+            <SentenceCard
+              key={s.id}
+              sentence={s}
+              wordMap={wordMap}
+              onUpdateWordStatus={onUpdateWordStatus}
+              onRemoveWordStatus={onRemoveWordStatus}
+              onDelete={onDeleteSentence}
+            />
+          ))}
+        </div>
       )}
     </div>
   )
