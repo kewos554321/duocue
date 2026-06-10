@@ -2,26 +2,22 @@ import type { ReactNode } from 'react'
 import Sidebar from './Sidebar'
 import { useTheme } from '../hooks/useTheme'
 import { Sun, Moon } from 'lucide-react'
-import type { ApiSentence, ApiVideo, ApiWord } from '../types'
+import type { ApiSentence, ApiWord } from '../types'
 
 interface Props {
   sentences: ApiSentence[]
-  videos: ApiVideo[]
   words: ApiWord[]
   practiceQueueCount: number
   page: 'sentences' | 'words' | 'practice'
-  selectedVideoUrl: string | null
   onSelectPage: (p: 'sentences' | 'words' | 'practice') => void
-  onSelectVideo: (url: string | null) => void
   children: ReactNode
 }
 
-export default function Layout({ sentences, videos, words, practiceQueueCount, page, selectedVideoUrl, onSelectPage, onSelectVideo, children }: Props) {
+export default function Layout({ sentences, words, practiceQueueCount, page, onSelectPage, children }: Props) {
   const { theme, toggleTheme } = useTheme()
 
   return (
     <div className="flex flex-col h-screen overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
-      {/* Header */}
       <header
         className="shrink-0 h-12 flex items-center justify-between px-5 border-b"
         style={{
@@ -48,17 +44,13 @@ export default function Layout({ sentences, videos, words, practiceQueueCount, p
         </button>
       </header>
 
-      {/* Body */}
       <div className="flex flex-1 overflow-hidden">
         <Sidebar
           sentences={sentences}
-          videos={videos}
           words={words}
           practiceQueueCount={practiceQueueCount}
           page={page}
-          selectedVideoUrl={selectedVideoUrl}
           onSelectPage={onSelectPage}
-          onSelectVideo={onSelectVideo}
         />
         <main className="flex-1 overflow-y-auto p-6">
           <div className="max-w-2xl mx-auto">
