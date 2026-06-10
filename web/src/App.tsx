@@ -15,7 +15,6 @@ export default function App() {
   const [error, setError] = useState<string | null>(null)
 
   const [page, setPage] = useState<'sentences' | 'words' | 'practice'>('sentences')
-  const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null)
 
   useEffect(() => {
     Promise.all([fetchSentences(), fetchVideos(), fetchWords(), fetchPracticeQueue()])
@@ -74,19 +73,16 @@ export default function App() {
   return (
     <Layout
       sentences={sentences}
-      videos={videos}
       words={words}
       practiceQueueCount={practiceQueue.length}
       page={page}
-      selectedVideoUrl={selectedVideoUrl}
       onSelectPage={setPage}
-      onSelectVideo={setSelectedVideoUrl}
     >
       {page === 'sentences' ? (
         <SentencesPage
           sentences={sentences}
+          videos={videos}
           wordMap={wordMap}
-          selectedVideoUrl={selectedVideoUrl}
           onUpdateWordStatus={updateWordStatus}
           onRemoveWordStatus={handleRemoveWord}
           onDeleteSentence={handleDeleteSentence}
