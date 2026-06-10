@@ -47,7 +47,8 @@ export default function SentencesPage({ sentences, videos, wordMap, onUpdateWord
   const platformGroups = useMemo(
     () => videos.reduce<Record<string, ApiVideo[]>>((acc, v) => {
       if (!acc[v.platform]) acc[v.platform] = []
-      acc[v.platform].push(v)
+      if (!acc[v.platform].some(x => x.url === v.url))
+        acc[v.platform].push(v)
       return acc
     }, {}),
     [videos]
@@ -106,7 +107,7 @@ export default function SentencesPage({ sentences, videos, wordMap, onUpdateWord
           </button>
 
           {/* Per-platform chips */}
-          {Object.keys(platformGroups).map(p => {
+          {Object.keys(platformGroups).sort().map(p => {
             const active = selectedPlatform === p
             return (
               <button
