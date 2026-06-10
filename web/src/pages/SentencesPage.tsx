@@ -136,7 +136,7 @@ export default function SentencesPage({ sentences, wordMap, selectedVideoUrl, on
             ))}
           </div>
 
-          {filtered.length > 0 && totalPages > 1 && (
+          {totalPages > 1 && (
             <div
               className="mt-6 pt-5 flex flex-col items-center gap-2.5"
               style={{ borderTop: '1px solid var(--separator)' }}
