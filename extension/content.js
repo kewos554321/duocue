@@ -838,6 +838,7 @@ document.addEventListener('keydown', async (e) => {
   const video = document.querySelector('video')
   const timestampS = video ? Math.floor(video.currentTime) : 0
 
+  showToast('✓ 已儲存')
   try {
     const res = await fetch(`${_expApiEndpoint}/sentences`, {
       method: 'POST',
@@ -848,12 +849,13 @@ document.addEventListener('keydown', async (e) => {
       body: JSON.stringify({
         platform: platform?.id ?? 'unknown',
         videoUrl: location.href,
+        title: platform?.getTitle?.() || '',
         text: textToSave,
         translation,
         timestampS
       })
     })
-    showToast(res.ok ? '✓ 已儲存' : '× 儲存失敗')
+    if (!res.ok) showToast('× 儲存失敗')
   } catch {
     showToast('× 儲存失敗')
   }
