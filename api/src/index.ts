@@ -20,7 +20,7 @@ app.use('*', async (c, next) => {
 })
 
 app.post('/sentences', async (c) => {
-  let body: { platform: string; videoUrl: string; text: string; translation?: string; timestampS: number }
+  let body: { platform: string; videoUrl: string; title?: string; text: string; translation?: string; timestampS: number }
   try {
     body = await c.req.json()
   } catch {
@@ -32,8 +32,9 @@ app.post('/sentences', async (c) => {
   }
 
   await c.env.DB.prepare(
-    `INSERT INTO videos (platform, url) VALUES (?, ?) ON CONFLICT(url) DO NOTHING`
-  ).bind(body.platform, body.videoUrl).run()
+    `INSERT INTO videos (platform, url, title) VALUES (?, ?, ?)
+     ON CONFLICT(url) DO UPDATE SET title = COALESCE(NULLIF(excluded.title, ''), videos.title)`
+  ).bind(body.platform, body.videoUrl, body.title ?? '').run()
 
   const video = await c.env.DB.prepare(
     `SELECT id FROM videos WHERE url = ?`

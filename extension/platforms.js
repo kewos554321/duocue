@@ -7,6 +7,7 @@ const PLATFORMS = [
     textJoin: '\n',
     playerSelector: '[data-testid="playerContainer"]',
     hideNativeSelector: '[class*="CaptionWindow-Fuse-Web-Play"]',
+    getTitle: () => document.title.replace(/[⁨⁩]/g, '').replace(/\s*[•·]\s*HBO Max$/i, '').trim(),
   },
   {
     id: 'netflix',
@@ -17,6 +18,7 @@ const PLATFORMS = [
     textJoin: '\n',
     playerSelector: '.watch-video--player-view',
     hideNativeSelector: '.player-timedtext',
+    getTitle: () => document.title.replace(/\s*\|\s*Netflix$/i, '').trim(),
   },
   {
     id: 'youtube',
@@ -27,5 +29,6 @@ const PLATFORMS = [
     textJoin: ' ',
     playerSelector: '#movie_player',
     hideNativeSelector: '.ytp-caption-window-container, .caption-window',
+    getTitle: () => document.title.replace(/\s*-\s*YouTube$/i, '').trim(),
   },
 ]
