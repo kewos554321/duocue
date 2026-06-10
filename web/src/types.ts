@@ -22,3 +22,17 @@ export interface ApiWord {
   word: string
   status: WordStatus
 }
+
+export interface PracticeSentence {
+  text: string
+  translation: string | null
+  videoUrl: string
+  timestampS: number
+}
+
+export interface PracticeWord {
+  word: string
+  intervalDays: number
+  nextReviewAt: number | null
+  sentence: PracticeSentence | null
+}
