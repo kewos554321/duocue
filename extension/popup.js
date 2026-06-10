@@ -492,3 +492,7 @@ expApiKey.addEventListener('blur', () => {
 expEyeBtn.addEventListener('click', () => {
   expApiKey.type = expApiKey.type === 'password' ? 'text' : 'password'
 })
+
+document.getElementById('openWebBtn').addEventListener('click', () => {
+  chrome.tabs.create({ url: 'https://duocue-web.pages.dev' })
+})
