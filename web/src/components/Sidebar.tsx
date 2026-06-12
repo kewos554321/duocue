@@ -1,3 +1,4 @@
+import { Link, useMatch } from 'react-router-dom'
 import { BookOpen, BookMarked, Sparkles } from 'lucide-react'
 import type { ApiSentence, ApiWord } from '../types'
 
@@ -5,15 +6,31 @@ interface Props {
   sentences: ApiSentence[]
   words: ApiWord[]
   practiceQueueCount: number
-  page: 'sentences' | 'words' | 'practice'
-  onSelectPage: (p: 'sentences' | 'words' | 'practice') => void
 }
 
-export default function Sidebar({ sentences, words, practiceQueueCount, page, onSelectPage }: Props) {
+export default function Sidebar({ sentences, words, practiceQueueCount }: Props) {
   const learningCount = words.filter(w => w.status === 'learning').length
 
-  const navActive = 'font-medium'
+  const sentencesActive = !!useMatch('/sentences/*')
+  const wordsActive = !!useMatch('/words')
+  const practiceActive = !!useMatch('/practice')
+
   const navBase = 'w-full text-left px-3 py-2 rounded-xl text-[14px] flex items-center justify-between transition-all duration-150 active:scale-[0.98]'
+
+  function navStyle(active: boolean) {
+    return {
+      color: active ? 'var(--ios-blue)' : 'var(--text-primary)',
+      background: active ? 'rgba(0,122,255,0.1)' : 'transparent',
+    }
+  }
+
+  function handleMouseEnter(e: React.MouseEvent<HTMLAnchorElement>, active: boolean) {
+    if (!active) e.currentTarget.style.background = 'rgba(120,120,128,0.08)'
+  }
+
+  function handleMouseLeave(e: React.MouseEvent<HTMLAnchorElement>, active: boolean) {
+    if (!active) e.currentTarget.style.background = 'transparent'
+  }
 
   return (
     <aside
@@ -21,67 +38,40 @@ export default function Sidebar({ sentences, words, practiceQueueCount, page, on
       style={{ background: 'var(--bg-card)', borderColor: 'var(--separator)' }}
     >
       <nav className="px-2 pt-3 flex flex-col gap-0.5">
-        <button
-          onClick={() => onSelectPage('sentences')}
-          className={`${navBase} ${page === 'sentences' ? navActive : ''}`}
-          style={{
-            color: page === 'sentences' ? 'var(--ios-blue)' : 'var(--text-primary)',
-            background: page === 'sentences' ? 'rgba(0,122,255,0.1)' : 'transparent',
-          }}
-          onMouseEnter={e => {
-            if (page !== 'sentences')
-              (e.currentTarget as HTMLButtonElement).style.background = 'rgba(120,120,128,0.08)'
-          }}
-          onMouseLeave={e => {
-            if (page !== 'sentences')
-              (e.currentTarget as HTMLButtonElement).style.background = 'transparent'
-          }}
+        <Link
+          to="/sentences/recent"
+          className={`${navBase} ${sentencesActive ? 'font-medium' : ''}`}
+          style={navStyle(sentencesActive)}
+          onMouseEnter={e => handleMouseEnter(e, sentencesActive)}
+          onMouseLeave={e => handleMouseLeave(e, sentencesActive)}
         >
           <span className="flex items-center gap-2.5">
             <BookOpen size={16} strokeWidth={1.8} />
-            全部句子
+            句子
           </span>
-          <Badge count={sentences.length} active={page === 'sentences'} />
-        </button>
+          <Badge count={sentences.length} active={sentencesActive} />
+        </Link>
 
-        <button
-          onClick={() => onSelectPage('words')}
-          className={`${navBase} ${page === 'words' ? navActive : ''}`}
-          style={{
-            color: page === 'words' ? 'var(--ios-blue)' : 'var(--text-primary)',
-            background: page === 'words' ? 'rgba(0,122,255,0.1)' : 'transparent',
-          }}
-          onMouseEnter={e => {
-            if (page !== 'words')
-              (e.currentTarget as HTMLButtonElement).style.background = 'rgba(120,120,128,0.08)'
-          }}
-          onMouseLeave={e => {
-            if (page !== 'words')
-              (e.currentTarget as HTMLButtonElement).style.background = 'transparent'
-          }}
+        <Link
+          to="/words"
+          className={`${navBase} ${wordsActive ? 'font-medium' : ''}`}
+          style={navStyle(wordsActive)}
+          onMouseEnter={e => handleMouseEnter(e, wordsActive)}
+          onMouseLeave={e => handleMouseLeave(e, wordsActive)}
         >
           <span className="flex items-center gap-2.5">
             <BookMarked size={16} strokeWidth={1.8} />
             單字本
           </span>
-          {learningCount > 0 && <Badge count={learningCount} active={page === 'words'} />}
-        </button>
+          {learningCount > 0 && <Badge count={learningCount} active={wordsActive} />}
+        </Link>
 
-        <button
-          onClick={() => onSelectPage('practice')}
-          className={`${navBase} ${page === 'practice' ? navActive : ''}`}
-          style={{
-            color: page === 'practice' ? 'var(--ios-blue)' : 'var(--text-primary)',
-            background: page === 'practice' ? 'rgba(0,122,255,0.1)' : 'transparent',
-          }}
-          onMouseEnter={e => {
-            if (page !== 'practice')
-              (e.currentTarget as HTMLButtonElement).style.background = 'rgba(120,120,128,0.08)'
-          }}
-          onMouseLeave={e => {
-            if (page !== 'practice')
-              (e.currentTarget as HTMLButtonElement).style.background = 'transparent'
-          }}
+        <Link
+          to="/practice"
+          className={`${navBase} ${practiceActive ? 'font-medium' : ''}`}
+          style={navStyle(practiceActive)}
+          onMouseEnter={e => handleMouseEnter(e, practiceActive)}
+          onMouseLeave={e => handleMouseLeave(e, practiceActive)}
         >
           <span className="flex items-center gap-2.5">
             <Sparkles size={16} strokeWidth={1.8} />
@@ -91,14 +81,14 @@ export default function Sidebar({ sentences, words, practiceQueueCount, page, on
             <span
               className="text-[11px] rounded-full px-1.5 py-0.5 min-w-[20px] text-center tabular-nums"
               style={{
-                background: page === 'practice' ? 'rgba(0,122,255,0.15)' : 'rgba(255,149,0,0.2)',
-                color: page === 'practice' ? 'var(--ios-blue)' : 'var(--ios-orange)',
+                background: practiceActive ? 'rgba(0,122,255,0.15)' : 'rgba(255,149,0,0.2)',
+                color: practiceActive ? 'var(--ios-blue)' : 'var(--ios-orange)',
               }}
             >
               {practiceQueueCount}
             </span>
           )}
-        </button>
+        </Link>
       </nav>
 
       <div
