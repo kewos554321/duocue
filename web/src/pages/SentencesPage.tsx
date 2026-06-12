@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react'
 import { Search } from 'lucide-react'
 import SentenceCard from '../components/SentenceCard'
+import VideoTitleEditor from '../components/VideoTitleEditor'
+import { patchVideoTitle } from '../api'
 import type { ApiSentence, ApiVideo, WordStatus } from '../types'
 
 type Filter = 'all' | 'learning' | 'unmarked'
@@ -43,15 +45,16 @@ export default function SentencesPage({ sentences, videos, wordMap, onUpdateWord
   const [search, setSearch] = useState('')
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null)
   const [selectedVideoUrl, setSelectedVideoUrl] = useState<string | null>(null)
+  const [localVideos, setLocalVideos] = useState<ApiVideo[]>(videos)
 
   const platformGroups = useMemo(
-    () => videos.reduce<Record<string, ApiVideo[]>>((acc, v) => {
+    () => localVideos.reduce<Record<string, ApiVideo[]>>((acc, v) => {
       if (!acc[v.platform]) acc[v.platform] = []
       if (!acc[v.platform].some(x => x.url === v.url))
         acc[v.platform].push(v)
       return acc
     }, {}),
-    [videos]
+    [localVideos]
   )
 
   const filtered = useMemo(() => {
@@ -86,6 +89,19 @@ export default function SentencesPage({ sentences, videos, wordMap, onUpdateWord
   const selectPlatform = (p: string | null) => {
     setSelectedPlatform(p)
     setSelectedVideoUrl(null)
+  }
+
+  const handleRename = async (videoUrl: string, newTitle: string) => {
+    setLocalVideos(prev =>
+      prev.map(v => v.url === videoUrl ? { ...v, title: newTitle } : v)
+    )
+    try {
+      await patchVideoTitle(videoUrl, newTitle)
+    } catch {
+      setLocalVideos(prev =>
+        prev.map(v => v.url === videoUrl ? { ...v, title: videos.find(o => o.url === videoUrl)?.title ?? v.title } : v)
+      )
+    }
   }
 
   return (
@@ -158,6 +174,12 @@ export default function SentencesPage({ sentences, videos, wordMap, onUpdateWord
                   </option>
                 ))}
               </select>
+              {selectedVideoUrl && (
+                <VideoTitleEditor
+                  title={localVideos.find(v => v.url === selectedVideoUrl)?.title ?? null}
+                  onRename={(newTitle) => handleRename(selectedVideoUrl, newTitle)}
+                />
+              )}
             </>
           )}
         </div>
