@@ -52,6 +52,15 @@ export async function patchWordStatus(word: string, status: WordStatus): Promise
   if (!res.ok) throw new Error(`PATCH /words/${word} failed: ${res.status}`)
 }
 
+export async function patchVideoTitle(url: string, title: string): Promise<void> {
+  const res = await fetch(`${API_ENDPOINT}/videos`, {
+    method: 'PATCH',
+    headers: authHeaders,
+    body: JSON.stringify({ url, title }),
+  })
+  if (!res.ok) throw new Error(`PATCH /videos failed: ${res.status}`)
+}
+
 export async function fetchPracticeQueue(): Promise<PracticeWord[]> {
   const res = await fetch(`${API_ENDPOINT}/practice/queue`, { headers: authHeaders })
   if (!res.ok) throw new Error(`GET /practice/queue failed: ${res.status}`)
