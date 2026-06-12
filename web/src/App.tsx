@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/Layout'
 import SentencesPage from './pages/SentencesPage'
 import WordBookPage from './pages/WordBookPage'
@@ -13,8 +14,6 @@ export default function App() {
   const [practiceQueue, setPracticeQueue] = useState<PracticeWord[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-
-  const [page, setPage] = useState<'sentences' | 'words' | 'practice'>('sentences')
 
   useEffect(() => {
     Promise.all([fetchSentences(), fetchVideos(), fetchWords(), fetchPracticeQueue()])
@@ -70,34 +69,24 @@ export default function App() {
     )
   }
 
+  const sentenceProps = {
+    sentences,
+    videos,
+    wordMap,
+    onUpdateWordStatus: updateWordStatus,
+    onRemoveWordStatus: handleRemoveWord,
+    onDeleteSentence: handleDeleteSentence,
+  }
+
   return (
-    <Layout
-      sentences={sentences}
-      words={words}
-      practiceQueueCount={practiceQueue.length}
-      page={page}
-      onSelectPage={setPage}
-    >
-      {page === 'sentences' ? (
-        <SentencesPage
-          sentences={sentences}
-          videos={videos}
-          wordMap={wordMap}
-          onUpdateWordStatus={updateWordStatus}
-          onRemoveWordStatus={handleRemoveWord}
-          onDeleteSentence={handleDeleteSentence}
-        />
-      ) : page === 'words' ? (
-        <WordBookPage
-          words={words}
-          sentences={sentences}
-        />
-      ) : (
-        <PracticePage
-          queue={practiceQueue}
-          onReview={handleReview}
-        />
-      )}
+    <Layout sentences={sentences} words={words} practiceQueueCount={practiceQueue.length}>
+      <Routes>
+        <Route path="/" element={<Navigate to="/sentences/recent" replace />} />
+        <Route path="/sentences/recent" element={<SentencesPage tab="recent" {...sentenceProps} />} />
+        <Route path="/sentences/all" element={<SentencesPage tab="all" {...sentenceProps} />} />
+        <Route path="/words" element={<WordBookPage words={words} sentences={sentences} />} />
+        <Route path="/practice" element={<PracticePage queue={practiceQueue} onReview={handleReview} />} />
+      </Routes>
     </Layout>
   )
 }
