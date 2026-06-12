@@ -8,12 +8,10 @@ interface Props {
   sentences: ApiSentence[]
   words: ApiWord[]
   practiceQueueCount: number
-  page: 'sentences' | 'words' | 'practice'
-  onSelectPage: (p: 'sentences' | 'words' | 'practice') => void
   children: ReactNode
 }
 
-export default function Layout({ sentences, words, practiceQueueCount, page, onSelectPage, children }: Props) {
+export default function Layout({ sentences, words, practiceQueueCount, children }: Props) {
   const { theme, toggleTheme } = useTheme()
 
   return (
@@ -49,8 +47,6 @@ export default function Layout({ sentences, words, practiceQueueCount, page, onS
           sentences={sentences}
           words={words}
           practiceQueueCount={practiceQueueCount}
-          page={page}
-          onSelectPage={onSelectPage}
         />
         <main className="flex-1 overflow-y-auto p-6">
           <div className="max-w-2xl mx-auto">
