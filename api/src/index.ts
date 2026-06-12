@@ -129,6 +129,30 @@ app.get('/videos', async (c) => {
   return c.json({ videos: results })
 })
 
+app.patch('/videos', async (c) => {
+  let body: { url?: string; title?: string }
+  try {
+    body = await c.req.json()
+  } catch {
+    return c.json({ error: 'Invalid JSON body' }, 400)
+  }
+
+  const { url, title } = body
+  if (!url || !title?.trim()) {
+    return c.json({ error: 'url and title are required' }, 400)
+  }
+
+  const result = await c.env.DB.prepare(
+    `UPDATE videos SET title = ? WHERE url = ?`
+  ).bind(title.trim(), url).run()
+
+  if (result.meta.changes === 0) {
+    return c.json({ error: 'Video not found' }, 404)
+  }
+
+  return c.json({ url, title: title.trim() })
+})
+
 app.get('/practice/queue', async (c) => {
   const { results: words } = await c.env.DB.prepare(`
     SELECT word, interval_days AS intervalDays, next_review_at AS nextReviewAt
