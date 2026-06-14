@@ -68,6 +68,7 @@ interface Props {
   onUpdateWordStatus: (word: string, status: WordStatus) => Promise<void>
   onRemoveWordStatus: (word: string) => Promise<void>
   onDelete: (id: number) => Promise<void>
+  relativeTime?: string
 }
 
 const PLATFORM_COLOR: Record<string, string> = {
@@ -109,7 +110,7 @@ function tokenize(text: string): Array<{ raw: string; isWord: boolean }> {
   }))
 }
 
-export default function SentenceCard({ sentence, wordMap, onUpdateWordStatus, onRemoveWordStatus, onDelete }: Props) {
+export default function SentenceCard({ sentence, wordMap, onUpdateWordStatus, onRemoveWordStatus, onDelete, relativeTime }: Props) {
   const tokens = tokenize(sentence.text)
 
   const taggedWords = [
@@ -155,7 +156,11 @@ export default function SentenceCard({ sentence, wordMap, onUpdateWordStatus, on
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
-          {sentence.platform === 'hbomax' ? (
+          {relativeTime ? (
+            <span className="text-[12px]" style={{ color: 'var(--text-secondary)' }}>
+              {relativeTime}
+            </span>
+          ) : sentence.platform === 'hbomax' ? (
             <DisabledTimestamp label="HBO Max 不支援時間點跳轉">
               <ExternalLink size={11} strokeWidth={2} />
               {formatTime(sentence.timestampS)}
