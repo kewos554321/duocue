@@ -43,7 +43,7 @@ app.post('/sentences', async (c) => {
   if (!video) return c.json({ error: 'Failed to create video record' }, 500)
 
   const result = await c.env.DB.prepare(
-    `INSERT INTO sentences (video_id, text, translation, timestamp_s) VALUES (?, ?, ?, ?)`
+    `INSERT OR IGNORE INTO sentences (video_id, text, translation, timestamp_s) VALUES (?, ?, ?, ?)`
   ).bind(video.id, body.text, body.translation ?? null, body.timestampS).run()
 
   return c.json({ id: result.meta.last_row_id }, 201)
