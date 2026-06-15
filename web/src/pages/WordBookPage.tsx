@@ -31,7 +31,7 @@ function WordRow({ word, sentences, onUpdateWordStatus, onRemoveWord }: WordRowP
       {/* Remove button — visible on hover */}
       <button
         onClick={() => onRemoveWord(word.word)}
-        className="absolute top-2.5 right-2.5 w-[22px] h-[22px] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:brightness-110"
+        className="absolute top-2.5 right-2.5 w-[22px] h-[22px] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity hover:brightness-110"
         style={{ background: 'rgba(255,69,58,0.15)', color: 'var(--ios-red)' }}
         title="移除單字"
         aria-label="移除單字"
@@ -68,6 +68,7 @@ function WordRow({ word, sentences, onUpdateWordStatus, onRemoveWord }: WordRowP
                   cursor: 'pointer',
                 }}
                 title="點擊切換狀態"
+                aria-label={isLearning ? '標記為已學習' : '標記為學習中'}
               >
                 {isLearning ? '學習中' : '已學習'}
               </button>
@@ -87,6 +88,8 @@ function WordRow({ word, sentences, onUpdateWordStatus, onRemoveWord }: WordRowP
               onClick={() => setExpanded(e => !e)}
               className="flex items-center gap-1 text-[12px] shrink-0 transition-opacity hover:opacity-70 mt-0.5"
               style={{ color: 'var(--ios-blue)' }}
+              aria-label={expanded ? '收合例句' : '展開例句'}
+              aria-expanded={expanded}
             >
               {matchingSentences.length} 例句
               {expanded
