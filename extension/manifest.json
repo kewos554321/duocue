@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "DuoCue",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Bilingual subtitles for streaming platforms",
   "author": "Wei Chieh Wang",
   "permissions": ["storage", "downloads", "activeTab", "tabs"],
