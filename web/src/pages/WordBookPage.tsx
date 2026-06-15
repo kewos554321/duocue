@@ -104,6 +104,14 @@ function WordRow({ word, sentences, onUpdateWordStatus, onRemoveWord }: WordRowP
   )
 }
 
+type StatusFilter = 'all' | 'learning' | 'learned'
+
+const FILTERS: [StatusFilter, string][] = [
+  ['all', '全部'],
+  ['learning', '學習中'],
+  ['learned', '已學習'],
+]
+
 interface Props {
   words: ApiWord[]
   sentences: ApiSentence[]
@@ -112,7 +120,22 @@ interface Props {
 }
 
 export default function WordBookPage({ words, sentences, onUpdateWordStatus, onRemoveWord }: Props) {
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
+  const [search, setSearch] = useState('')
+
   const markedWords = words.filter(w => w.status === 'learning' || w.status === 'learned')
+
+  const filtered = markedWords
+    .filter(w => {
+      if (statusFilter === 'learning' && w.status !== 'learning') return false
+      if (statusFilter === 'learned' && w.status !== 'learned') return false
+      if (search.trim() && !w.word.toLowerCase().includes(search.toLowerCase())) return false
+      return true
+    })
+    .sort((a, b) => {
+      if (a.status !== b.status) return a.status === 'learning' ? -1 : 1
+      return a.word.localeCompare(b.word)
+    })
 
   if (markedWords.length === 0) {
     return (
@@ -137,14 +160,78 @@ export default function WordBookPage({ words, sentences, onUpdateWordStatus, onR
           className="ml-2 text-[14px] font-normal"
           style={{ color: 'var(--text-secondary)' }}
         >
-          {markedWords.length} 個
+          {filtered.length} 個
         </span>
       </h2>
-      <div className="flex flex-col gap-2.5">
-        {markedWords.map(w => (
-          <WordRow key={w.word} word={w} sentences={sentences} onUpdateWordStatus={onUpdateWordStatus} onRemoveWord={onRemoveWord} />
-        ))}
+
+      {/* Toolbar */}
+      <div className="flex items-center gap-3 mb-5 flex-wrap">
+        <div className="flex rounded-lg p-0.5" style={{ background: 'rgba(120,120,128,0.12)' }}>
+          {FILTERS.map(([f, label]) => (
+            <button
+              key={f}
+              onClick={() => setStatusFilter(f)}
+              className="px-3 py-1 rounded-[6px] text-[13px] transition-all duration-200"
+              style={{
+                background: statusFilter === f ? 'var(--bg-card)' : 'transparent',
+                color: statusFilter === f ? 'var(--text-primary)' : 'var(--text-secondary)',
+                fontWeight: statusFilter === f ? 600 : 400,
+                boxShadow: statusFilter === f ? '0 1px 3px rgba(0,0,0,0.12)' : 'none',
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        <div className="relative flex-1 min-w-36 max-w-xs">
+          <Search
+            size={14}
+            className="absolute left-3 top-1/2 -translate-y-1/2"
+            style={{ color: 'var(--text-secondary)' }}
+          />
+          <input
+            type="text"
+            placeholder="搜尋單字…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full rounded-xl pl-8 pr-3 py-1.5 text-[14px] outline-none"
+            style={{ background: 'rgba(120,120,128,0.12)', color: 'var(--text-primary)' }}
+            onFocus={e => (e.currentTarget.style.background = 'rgba(120,120,128,0.18)')}
+            onBlur={e => (e.currentTarget.style.background = 'rgba(120,120,128,0.12)')}
+          />
+        </div>
       </div>
+
+      {filtered.length === 0 ? (
+        <div
+          className="text-center py-16 text-[14px]"
+          style={{ color: 'var(--text-secondary)' }}
+        >
+          沒有符合的單字
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2.5">
+          {filtered.map((w, i) => (
+            <Fragment key={w.word}>
+              {statusFilter === 'all' && (i === 0 || filtered[i - 1].status !== w.status) && (
+                <p
+                  className="text-[11px] font-semibold uppercase tracking-wide mt-2 first:mt-0"
+                  style={{ color: 'var(--text-secondary)' }}
+                >
+                  {w.status === 'learning' ? '學習中' : '已學習'}
+                </p>
+              )}
+              <WordRow
+                word={w}
+                sentences={sentences}
+                onUpdateWordStatus={onUpdateWordStatus}
+                onRemoveWord={onRemoveWord}
+              />
+            </Fragment>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
