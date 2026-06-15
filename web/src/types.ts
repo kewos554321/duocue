@@ -36,3 +36,10 @@ export interface PracticeWord {
   nextReviewAt: number | null
   sentence: PracticeSentence | null
 }
+
+export interface PracticeStats {
+  streak: number
+  todayCount: number
+  wordCounts: { learning: number; learned: number }
+  last30Days: { date: string; count: number }[]
+}
