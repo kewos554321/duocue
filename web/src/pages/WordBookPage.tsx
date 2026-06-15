@@ -1,14 +1,28 @@
-import { useState } from 'react'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { useState, Fragment } from 'react'
+import { ChevronDown, ChevronUp, Search, X } from 'lucide-react'
 import { useDefinition } from '../hooks/useDefinition'
-import type { ApiSentence, ApiWord } from '../types'
+import type { ApiSentence, ApiWord, WordStatus } from '../types'
+
+const PLATFORM_COLOR: Record<string, string> = {
+  netflix: '#E50914',
+  hbomax: '#5822B4',
+  youtube: '#FF0000',
+}
+
+const PLATFORM_LABEL: Record<string, string> = {
+  netflix: 'Netflix',
+  hbomax: 'HBO Max',
+  youtube: 'YouTube',
+}
 
 interface WordRowProps {
   word: ApiWord
   sentences: ApiSentence[]
+  onUpdateWordStatus: (word: string, status: WordStatus) => Promise<void>
+  onRemoveWord: (word: string) => Promise<void>
 }
 
-function WordRow({ word, sentences }: WordRowProps) {
+function WordRow({ word, sentences, onUpdateWordStatus, onRemoveWord }: WordRowProps) {
   const { definition, partOfSpeech } = useDefinition(word.word)
   const [expanded, setExpanded] = useState(false)
 
@@ -16,17 +30,32 @@ function WordRow({ word, sentences }: WordRowProps) {
     new RegExp(`(?<![a-zA-Z])${word.word}(?![a-zA-Z])`, 'i').test(s.text)
   )
 
+  const uniqueSources = matchingSentences.filter(
+    (s, i, arr) => arr.findIndex(x => x.videoUrl === s.videoUrl) === i
+  )
+
   const isLearning = word.status === 'learning'
 
   return (
     <div
-      className="rounded-2xl overflow-hidden transition-all duration-150"
+      className="group rounded-2xl overflow-hidden transition-all duration-150 relative"
       style={{
         background: 'var(--bg-card)',
         boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
       }}
     >
-      <div className="px-4 py-3.5">
+      {/* Remove button — visible on hover/focus */}
+      <button
+        onClick={() => onRemoveWord(word.word)}
+        className="absolute top-2.5 right-2.5 w-[22px] h-[22px] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity hover:brightness-110"
+        style={{ background: 'rgba(255,69,58,0.15)', color: 'var(--ios-red)' }}
+        title="移除單字"
+        aria-label="移除單字"
+      >
+        <X size={10} strokeWidth={2.5} />
+      </button>
+
+      <div className="px-4 py-3.5 pr-10">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -44,23 +73,54 @@ function WordRow({ word, sentences }: WordRowProps) {
                   {partOfSpeech}
                 </span>
               )}
-              <span
-                className="text-[11px] rounded-full px-2 py-0.5"
+              <button
+                onClick={() => onUpdateWordStatus(word.word, isLearning ? 'learned' : 'learning')}
+                className="text-[11px] rounded-full px-2 py-0.5 transition-all hover:brightness-110 active:scale-95"
                 style={{
                   background: isLearning ? 'rgba(255,149,0,0.12)' : 'rgba(52,199,89,0.12)',
                   color: isLearning ? 'var(--ios-orange)' : 'var(--ios-green)',
+                  border: 'none',
+                  cursor: 'pointer',
                 }}
+                title="點擊切換狀態"
+                aria-label={isLearning ? '標記為已學習' : '標記為學習中'}
               >
                 {isLearning ? '學習中' : '已學習'}
-              </span>
+              </button>
             </div>
+
             {definition && (
               <p
-                className="text-[13px] leading-relaxed"
+                className="text-[13px] leading-relaxed mb-2"
                 style={{ color: 'var(--text-secondary)' }}
               >
                 {definition}
               </p>
+            )}
+
+            {/* Source chips */}
+            {uniqueSources.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {uniqueSources.map(s => (
+                  <span
+                    key={s.videoUrl}
+                    className="flex items-center gap-1 text-[11px] rounded-md px-2 py-0.5"
+                    style={{
+                      background: 'rgba(120,120,128,0.12)',
+                      color: 'var(--text-secondary)',
+                      border: '1px solid rgba(120,120,128,0.18)',
+                    }}
+                  >
+                    <span
+                      className="w-1.5 h-1.5 rounded-full shrink-0"
+                      style={{ background: PLATFORM_COLOR[s.platform] ?? '#888' }}
+                    />
+                    <span className="truncate max-w-[160px]">
+                      {s.videoTitle ?? PLATFORM_LABEL[s.platform] ?? s.platform}
+                    </span>
+                  </span>
+                ))}
+              </div>
             )}
           </div>
 
@@ -69,6 +129,8 @@ function WordRow({ word, sentences }: WordRowProps) {
               onClick={() => setExpanded(e => !e)}
               className="flex items-center gap-1 text-[12px] shrink-0 transition-opacity hover:opacity-70 mt-0.5"
               style={{ color: 'var(--ios-blue)' }}
+              aria-label={expanded ? '收合例句' : '展開例句'}
+              aria-expanded={expanded}
             >
               {matchingSentences.length} 例句
               {expanded
@@ -82,18 +144,31 @@ function WordRow({ word, sentences }: WordRowProps) {
 
       {expanded && (
         <div
-          className="px-4 pb-3.5 flex flex-col gap-2 border-t"
+          className="px-4 pb-3.5 flex flex-col gap-3 border-t"
           style={{ borderColor: 'var(--separator)' }}
         >
-          <div className="pt-3 flex flex-col gap-2">
+          <div className="pt-3 flex flex-col gap-3">
             {matchingSentences.map(s => (
-              <p
-                key={s.id}
-                className="text-[13px] leading-relaxed"
-                style={{ color: 'var(--text-secondary)' }}
-              >
-                {s.text}
-              </p>
+              <div key={s.id} className="flex flex-col gap-0.5">
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className="w-1.5 h-1.5 rounded-full shrink-0"
+                    style={{ background: PLATFORM_COLOR[s.platform] ?? '#888' }}
+                  />
+                  <span
+                    className="text-[11px] truncate"
+                    style={{ color: 'var(--text-secondary)' }}
+                  >
+                    {s.videoTitle ?? PLATFORM_LABEL[s.platform] ?? s.platform}
+                  </span>
+                </div>
+                <p
+                  className="text-[13px] leading-relaxed"
+                  style={{ color: 'var(--text-secondary)' }}
+                >
+                  {s.text}
+                </p>
+              </div>
             ))}
           </div>
         </div>
@@ -102,13 +177,38 @@ function WordRow({ word, sentences }: WordRowProps) {
   )
 }
 
+type StatusFilter = 'all' | 'learning' | 'learned'
+
+const FILTERS: [StatusFilter, string][] = [
+  ['all', '全部'],
+  ['learning', '學習中'],
+  ['learned', '已學習'],
+]
+
 interface Props {
   words: ApiWord[]
   sentences: ApiSentence[]
+  onUpdateWordStatus: (word: string, status: WordStatus) => Promise<void>
+  onRemoveWord: (word: string) => Promise<void>
 }
 
-export default function WordBookPage({ words, sentences }: Props) {
+export default function WordBookPage({ words, sentences, onUpdateWordStatus, onRemoveWord }: Props) {
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
+  const [search, setSearch] = useState('')
+
   const markedWords = words.filter(w => w.status === 'learning' || w.status === 'learned')
+
+  const filtered = markedWords
+    .filter(w => {
+      if (statusFilter === 'learning' && w.status !== 'learning') return false
+      if (statusFilter === 'learned' && w.status !== 'learned') return false
+      if (search.trim() && !w.word.toLowerCase().includes(search.toLowerCase())) return false
+      return true
+    })
+    .sort((a, b) => {
+      if (a.status !== b.status) return a.status === 'learning' ? -1 : 1
+      return a.word.localeCompare(b.word)
+    })
 
   if (markedWords.length === 0) {
     return (
@@ -133,14 +233,78 @@ export default function WordBookPage({ words, sentences }: Props) {
           className="ml-2 text-[14px] font-normal"
           style={{ color: 'var(--text-secondary)' }}
         >
-          {markedWords.length} 個
+          {filtered.length} 個
         </span>
       </h2>
-      <div className="flex flex-col gap-2.5">
-        {markedWords.map(w => (
-          <WordRow key={w.word} word={w} sentences={sentences} />
-        ))}
+
+      {/* Toolbar */}
+      <div className="flex items-center gap-3 mb-5 flex-wrap">
+        <div className="flex rounded-lg p-0.5" style={{ background: 'rgba(120,120,128,0.12)' }}>
+          {FILTERS.map(([f, label]) => (
+            <button
+              key={f}
+              onClick={() => setStatusFilter(f)}
+              className="px-3 py-1 rounded-[6px] text-[13px] transition-all duration-200"
+              style={{
+                background: statusFilter === f ? 'var(--bg-card)' : 'transparent',
+                color: statusFilter === f ? 'var(--text-primary)' : 'var(--text-secondary)',
+                fontWeight: statusFilter === f ? 600 : 400,
+                boxShadow: statusFilter === f ? '0 1px 3px rgba(0,0,0,0.12)' : 'none',
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        <div className="relative flex-1 min-w-36 max-w-xs">
+          <Search
+            size={14}
+            className="absolute left-3 top-1/2 -translate-y-1/2"
+            style={{ color: 'var(--text-secondary)' }}
+          />
+          <input
+            type="text"
+            placeholder="搜尋單字…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full rounded-xl pl-8 pr-3 py-1.5 text-[14px] outline-none"
+            style={{ background: 'rgba(120,120,128,0.12)', color: 'var(--text-primary)' }}
+            onFocus={e => (e.currentTarget.style.background = 'rgba(120,120,128,0.18)')}
+            onBlur={e => (e.currentTarget.style.background = 'rgba(120,120,128,0.12)')}
+          />
+        </div>
       </div>
+
+      {filtered.length === 0 ? (
+        <div
+          className="text-center py-16 text-[14px]"
+          style={{ color: 'var(--text-secondary)' }}
+        >
+          沒有符合的單字
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2.5">
+          {filtered.map((w, i) => (
+            <Fragment key={w.word}>
+              {statusFilter === 'all' && (i === 0 || filtered[i - 1].status !== w.status) && (
+                <p
+                  className="text-[11px] font-semibold uppercase tracking-wide mt-2 first:mt-0"
+                  style={{ color: 'var(--text-secondary)' }}
+                >
+                  {w.status === 'learning' ? '學習中' : '已學習'}
+                </p>
+              )}
+              <WordRow
+                word={w}
+                sentences={sentences}
+                onUpdateWordStatus={onUpdateWordStatus}
+                onRemoveWord={onRemoveWord}
+              />
+            </Fragment>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

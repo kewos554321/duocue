@@ -84,7 +84,7 @@ export default function App() {
         <Route path="/" element={<Navigate to="/sentences/recent" replace />} />
         <Route path="/sentences/recent" element={<SentencesPage tab="recent" {...sentenceProps} />} />
         <Route path="/sentences/all" element={<SentencesPage tab="all" {...sentenceProps} />} />
-        <Route path="/words" element={<WordBookPage words={words} sentences={sentences} />} />
+        <Route path="/words" element={<WordBookPage words={words} sentences={sentences} onUpdateWordStatus={updateWordStatus} onRemoveWord={handleRemoveWord} />} />
         <Route path="/practice" element={<PracticePage queue={practiceQueue} onReview={handleReview} />} />
       </Routes>
     </Layout>
