@@ -3,6 +3,18 @@ import { ChevronDown, ChevronUp, Search, X } from 'lucide-react'
 import { useDefinition } from '../hooks/useDefinition'
 import type { ApiSentence, ApiWord, WordStatus } from '../types'
 
+const PLATFORM_COLOR: Record<string, string> = {
+  netflix: '#E50914',
+  hbomax: '#5822B4',
+  youtube: '#FF0000',
+}
+
+const PLATFORM_LABEL: Record<string, string> = {
+  netflix: 'Netflix',
+  hbomax: 'HBO Max',
+  youtube: 'YouTube',
+}
+
 interface WordRowProps {
   word: ApiWord
   sentences: ApiSentence[]
@@ -18,6 +30,10 @@ function WordRow({ word, sentences, onUpdateWordStatus, onRemoveWord }: WordRowP
     new RegExp(`(?<![a-zA-Z])${word.word}(?![a-zA-Z])`, 'i').test(s.text)
   )
 
+  const uniqueSources = matchingSentences.filter(
+    (s, i, arr) => arr.findIndex(x => x.videoUrl === s.videoUrl) === i
+  )
+
   const isLearning = word.status === 'learning'
 
   return (
@@ -28,7 +44,7 @@ function WordRow({ word, sentences, onUpdateWordStatus, onRemoveWord }: WordRowP
         boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
       }}
     >
-      {/* Remove button — visible on hover */}
+      {/* Remove button — visible on hover/focus */}
       <button
         onClick={() => onRemoveWord(word.word)}
         className="absolute top-2.5 right-2.5 w-[22px] h-[22px] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity hover:brightness-110"
@@ -57,7 +73,6 @@ function WordRow({ word, sentences, onUpdateWordStatus, onRemoveWord }: WordRowP
                   {partOfSpeech}
                 </span>
               )}
-              {/* Clickable status badge */}
               <button
                 onClick={() => onUpdateWordStatus(word.word, isLearning ? 'learned' : 'learning')}
                 className="text-[11px] rounded-full px-2 py-0.5 transition-all hover:brightness-110 active:scale-95"
@@ -73,13 +88,39 @@ function WordRow({ word, sentences, onUpdateWordStatus, onRemoveWord }: WordRowP
                 {isLearning ? '學習中' : '已學習'}
               </button>
             </div>
+
             {definition && (
               <p
-                className="text-[13px] leading-relaxed"
+                className="text-[13px] leading-relaxed mb-2"
                 style={{ color: 'var(--text-secondary)' }}
               >
                 {definition}
               </p>
+            )}
+
+            {/* Source chips */}
+            {uniqueSources.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {uniqueSources.map(s => (
+                  <span
+                    key={s.videoUrl}
+                    className="flex items-center gap-1 text-[11px] rounded-md px-2 py-0.5"
+                    style={{
+                      background: 'rgba(120,120,128,0.12)',
+                      color: 'var(--text-secondary)',
+                      border: '1px solid rgba(120,120,128,0.18)',
+                    }}
+                  >
+                    <span
+                      className="w-1.5 h-1.5 rounded-full shrink-0"
+                      style={{ background: PLATFORM_COLOR[s.platform] ?? '#888' }}
+                    />
+                    <span className="truncate max-w-[160px]">
+                      {s.videoTitle ?? PLATFORM_LABEL[s.platform] ?? s.platform}
+                    </span>
+                  </span>
+                ))}
+              </div>
             )}
           </div>
 
@@ -103,18 +144,31 @@ function WordRow({ word, sentences, onUpdateWordStatus, onRemoveWord }: WordRowP
 
       {expanded && (
         <div
-          className="px-4 pb-3.5 flex flex-col gap-2 border-t"
+          className="px-4 pb-3.5 flex flex-col gap-3 border-t"
           style={{ borderColor: 'var(--separator)' }}
         >
-          <div className="pt-3 flex flex-col gap-2">
+          <div className="pt-3 flex flex-col gap-3">
             {matchingSentences.map(s => (
-              <p
-                key={s.id}
-                className="text-[13px] leading-relaxed"
-                style={{ color: 'var(--text-secondary)' }}
-              >
-                {s.text}
-              </p>
+              <div key={s.id} className="flex flex-col gap-0.5">
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className="w-1.5 h-1.5 rounded-full shrink-0"
+                    style={{ background: PLATFORM_COLOR[s.platform] ?? '#888' }}
+                  />
+                  <span
+                    className="text-[11px] truncate"
+                    style={{ color: 'var(--text-secondary)' }}
+                  >
+                    {s.videoTitle ?? PLATFORM_LABEL[s.platform] ?? s.platform}
+                  </span>
+                </div>
+                <p
+                  className="text-[13px] leading-relaxed"
+                  style={{ color: 'var(--text-secondary)' }}
+                >
+                  {s.text}
+                </p>
+              </div>
             ))}
           </div>
         </div>
