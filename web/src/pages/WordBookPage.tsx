@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { useState, Fragment } from 'react'
+import { ChevronDown, ChevronUp, Search, X } from 'lucide-react'
 import { useDefinition } from '../hooks/useDefinition'
 import type { ApiSentence, ApiWord, WordStatus } from '../types'
 
