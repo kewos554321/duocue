@@ -334,6 +334,13 @@ function setWordStatus(word, status) {
   const key = word.toLowerCase()
   _wordStatus[key] = status
   chrome.storage.local.set({ wordStatus: _wordStatus })
+  if (experimentalEnabled && _expApiEndpoint && _expApiKey) {
+    fetch(`${_expApiEndpoint}/words/${encodeURIComponent(key)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${_expApiKey}` },
+      body: JSON.stringify({ status })
+    }).catch(e => console.warn('[DuoCue] failed to sync word status', e))
+  }
   document.querySelectorAll(`#duocue-overlay .duocue-word`).forEach(span => {
     if ((span.dataset.word || '').toLowerCase() === key) {
       span.classList.toggle('duocue-word--learning', status === 'learning')
