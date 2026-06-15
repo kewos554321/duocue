@@ -22,13 +22,24 @@ function WordRow({ word, sentences, onUpdateWordStatus, onRemoveWord }: WordRowP
 
   return (
     <div
-      className="rounded-2xl overflow-hidden transition-all duration-150"
+      className="group rounded-2xl overflow-hidden transition-all duration-150 relative"
       style={{
         background: 'var(--bg-card)',
         boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
       }}
     >
-      <div className="px-4 py-3.5">
+      {/* Remove button — visible on hover */}
+      <button
+        onClick={() => onRemoveWord(word.word)}
+        className="absolute top-2.5 right-2.5 w-[22px] h-[22px] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:brightness-110"
+        style={{ background: 'rgba(255,69,58,0.15)', color: 'var(--ios-red)' }}
+        title="移除單字"
+        aria-label="移除單字"
+      >
+        <X size={10} strokeWidth={2.5} />
+      </button>
+
+      <div className="px-4 py-3.5 pr-10">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -46,15 +57,20 @@ function WordRow({ word, sentences, onUpdateWordStatus, onRemoveWord }: WordRowP
                   {partOfSpeech}
                 </span>
               )}
-              <span
-                className="text-[11px] rounded-full px-2 py-0.5"
+              {/* Clickable status badge */}
+              <button
+                onClick={() => onUpdateWordStatus(word.word, isLearning ? 'learned' : 'learning')}
+                className="text-[11px] rounded-full px-2 py-0.5 transition-all hover:brightness-110 active:scale-95"
                 style={{
                   background: isLearning ? 'rgba(255,149,0,0.12)' : 'rgba(52,199,89,0.12)',
                   color: isLearning ? 'var(--ios-orange)' : 'var(--ios-green)',
+                  border: 'none',
+                  cursor: 'pointer',
                 }}
+                title="點擊切換狀態"
               >
                 {isLearning ? '學習中' : '已學習'}
-              </span>
+              </button>
             </div>
             {definition && (
               <p
