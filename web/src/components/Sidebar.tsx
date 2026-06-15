@@ -1,5 +1,5 @@
 import { Link, useMatch } from 'react-router-dom'
-import { BookOpen, BookMarked, Sparkles } from 'lucide-react'
+import { BookOpen, BookMarked, Sparkles, BarChart2 } from 'lucide-react'
 import type { ApiSentence, ApiWord } from '../types'
 
 interface Props {
@@ -14,6 +14,7 @@ export default function Sidebar({ sentences, words, practiceQueueCount }: Props)
   const sentencesActive = !!useMatch('/sentences/*')
   const wordsActive = !!useMatch('/words')
   const practiceActive = !!useMatch('/practice')
+  const statsActive = !!useMatch('/stats')
 
   const navBase = 'w-full text-left px-3 py-2 rounded-xl text-[14px] flex items-center justify-between transition-all duration-150 active:scale-[0.98]'
 
@@ -88,6 +89,19 @@ export default function Sidebar({ sentences, words, practiceQueueCount }: Props)
               {practiceQueueCount}
             </span>
           )}
+        </Link>
+
+        <Link
+          to="/stats"
+          className={`${navBase} ${statsActive ? 'font-medium' : ''}`}
+          style={navStyle(statsActive)}
+          onMouseEnter={e => handleMouseEnter(e, statsActive)}
+          onMouseLeave={e => handleMouseLeave(e, statsActive)}
+        >
+          <span className="flex items-center gap-2.5">
+            <BarChart2 size={16} strokeWidth={1.8} />
+            統計
+          </span>
         </Link>
       </nav>
 

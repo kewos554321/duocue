@@ -190,34 +190,139 @@ app.get('/practice/queue', async (c) => {
   return c.json({ queue })
 })
 
+function calcSM2(
+  rating: 1 | 2 | 3 | 4,
+  intervalDays: number,
+  repetitions: number,
+  easeFactor: number,
+): { newInterval: number; newRepetitions: number; newEaseFactor: number } {
+  let newInterval: number
+  let newRepetitions: number
+  let newEaseFactor = easeFactor
+
+  if (rating === 1) {
+    newInterval = 1
+    newRepetitions = 0
+    newEaseFactor = Math.max(1.3, easeFactor - 0.2)
+  } else if (rating === 2) {
+    newInterval = Math.max(1, Math.round(intervalDays * 1.2))
+    newRepetitions = repetitions
+    newEaseFactor = Math.max(1.3, easeFactor - 0.15)
+  } else {
+    if (repetitions === 0) newInterval = 1
+    else if (repetitions === 1) newInterval = 6
+    else newInterval = Math.round(intervalDays * easeFactor)
+    if (rating === 4) {
+      newInterval = Math.round(newInterval * 1.3)
+      newEaseFactor = Math.min(3.0, easeFactor + 0.1)
+    }
+    newRepetitions = repetitions + 1
+    newEaseFactor = Math.max(1.3, newEaseFactor)
+  }
+
+  return { newInterval, newRepetitions, newEaseFactor }
+}
+
 app.post('/practice/review', async (c) => {
-  let body: { word?: string; result?: string }
+  let body: { word?: string; rating?: number }
   try {
     body = await c.req.json()
   } catch {
     return c.json({ error: 'Invalid JSON body' }, 400)
   }
 
-  const { word, result } = body
-  if (!word || (result !== 'know' && result !== 'unknown')) {
-    return c.json({ error: 'word and result ("know"|"unknown") required' }, 400)
+  const { word, rating } = body
+  if (!word || ![1, 2, 3, 4].includes(rating as number)) {
+    return c.json({ error: 'word and rating (1|2|3|4) required' }, 400)
   }
 
   const w = word.toLowerCase()
+  const r = rating as 1 | 2 | 3 | 4
+
   const current = await c.env.DB.prepare(
-    `SELECT interval_days FROM words WHERE word = ?`
-  ).bind(w).first<{ interval_days: number }>()
+    `SELECT interval_days, repetitions, ease_factor FROM words WHERE word = ?`
+  ).bind(w).first<{ interval_days: number; repetitions: number; ease_factor: number }>()
 
   if (!current) return c.json({ error: 'Word not found' }, 404)
 
-  const newInterval = result === 'know' ? current.interval_days * 2 : 1
+  const { newInterval, newRepetitions, newEaseFactor } = calcSM2(
+    r,
+    current.interval_days,
+    current.repetitions,
+    current.ease_factor,
+  )
+
   const nextReviewAt = Math.floor(Date.now() / 1000) + newInterval * 86400
+  const newStatus = newInterval >= 21 ? 'learned' : 'learning'
 
-  await c.env.DB.prepare(
-    `UPDATE words SET interval_days = ?, next_review_at = ? WHERE word = ?`
-  ).bind(newInterval, nextReviewAt, w).run()
+  await c.env.DB.batch([
+    c.env.DB.prepare(
+      `UPDATE words SET interval_days = ?, next_review_at = ?, ease_factor = ?, repetitions = ?, status = ? WHERE word = ?`
+    ).bind(newInterval, nextReviewAt, newEaseFactor, newRepetitions, newStatus, w),
+    c.env.DB.prepare(
+      `INSERT INTO reviews (word, rating, reviewed_at, interval_before, interval_after) VALUES (?, ?, ?, ?, ?)`
+    ).bind(w, r, Math.floor(Date.now() / 1000), current.interval_days, newInterval),
+  ])
 
-  return c.json({ word: w, intervalDays: newInterval, nextReviewAt })
+  return c.json({ word: w, intervalDays: newInterval, nextReviewAt, graduated: newStatus === 'learned' })
+})
+
+app.get('/practice/stats', async (c) => {
+  const now = Math.floor(Date.now() / 1000)
+  const thirtyDaysAgo = now - 30 * 86400
+
+  const [last30, streakRows, wordCounts, todayRow] = await c.env.DB.batch([
+    c.env.DB.prepare(`
+      SELECT date(reviewed_at, 'unixepoch') AS date, COUNT(*) AS count
+      FROM reviews
+      WHERE reviewed_at >= ?
+      GROUP BY date
+      ORDER BY date ASC
+    `).bind(thirtyDaysAgo),
+
+    c.env.DB.prepare(`
+      SELECT date(reviewed_at, 'unixepoch') AS date
+      FROM reviews
+      GROUP BY date
+      ORDER BY date DESC
+    `),
+
+    c.env.DB.prepare(`
+      SELECT
+        SUM(CASE WHEN status = 'learning' THEN 1 ELSE 0 END) AS learning,
+        SUM(CASE WHEN status = 'learned'  THEN 1 ELSE 0 END) AS learned
+      FROM words
+    `),
+
+    c.env.DB.prepare(`
+      SELECT COUNT(*) AS count FROM reviews
+      WHERE reviewed_at >= unixepoch('now','start of day')
+    `),
+  ])
+
+  const dates = (streakRows.results as { date: string }[]).map(r => r.date)
+  const todayStr = new Date().toISOString().slice(0, 10)
+  const yesterdayStr = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
+
+  let streak = 0
+  if (dates.length > 0 && (dates[0] === todayStr || dates[0] === yesterdayStr)) {
+    streak = 1
+    for (let i = 1; i < dates.length; i++) {
+      const prev = new Date(dates[i - 1]).getTime()
+      const curr = new Date(dates[i]).getTime()
+      if ((prev - curr) / 86400000 === 1) streak++
+      else break
+    }
+  }
+
+  const counts = (wordCounts.results[0] as { learning: number; learned: number }) ?? { learning: 0, learned: 0 }
+
+  return c.json({
+    streak,
+    todayCount: (todayRow.results[0] as { count: number })?.count ?? 0,
+    wordCounts: { learning: counts.learning ?? 0, learned: counts.learned ?? 0 },
+    last30Days: last30.results as { date: string; count: number }[],
+  })
 })
 
 export default app

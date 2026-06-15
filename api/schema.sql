@@ -32,3 +32,19 @@ WHERE id NOT IN (
 -- Step 2: Add unique index to prevent future duplicates
 CREATE UNIQUE INDEX IF NOT EXISTS uq_sentences_video_text
   ON sentences (video_id, text);
+
+-- Migration: SM-2 spaced repetition fields
+ALTER TABLE words ADD COLUMN ease_factor REAL NOT NULL DEFAULT 2.5;
+ALTER TABLE words ADD COLUMN repetitions  INTEGER NOT NULL DEFAULT 0;
+
+-- Review log: one row per practice review event
+CREATE TABLE IF NOT EXISTS reviews (
+  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+  word            TEXT    NOT NULL,
+  rating          INTEGER NOT NULL CHECK(rating IN (1,2,3,4)),
+  reviewed_at     INTEGER NOT NULL,
+  interval_before INTEGER NOT NULL,
+  interval_after  INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_reviews_word ON reviews(word);
+CREATE INDEX IF NOT EXISTS idx_reviews_date ON reviews(reviewed_at);

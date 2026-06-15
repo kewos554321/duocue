@@ -1,5 +1,7 @@
 export type WordStatus = 'learning' | 'learned'
 
+export type PracticeRating = 1 | 2 | 3 | 4
+
 export interface ApiSentence {
   id: number
   text: string
@@ -35,4 +37,11 @@ export interface PracticeWord {
   intervalDays: number
   nextReviewAt: number | null
   sentence: PracticeSentence | null
+}
+
+export interface PracticeStats {
+  streak: number
+  todayCount: number
+  wordCounts: { learning: number; learned: number }
+  last30Days: { date: string; count: number }[]
 }

@@ -1,5 +1,5 @@
 import { API_ENDPOINT, API_KEY } from './config'
-import type { ApiSentence, ApiVideo, ApiWord, WordStatus, PracticeWord } from './types'
+import type { ApiSentence, ApiVideo, ApiWord, WordStatus, PracticeWord, PracticeStats } from './types'
 
 const authHeaders = {
   Authorization: `Bearer ${API_KEY}`,
@@ -68,11 +68,17 @@ export async function fetchPracticeQueue(): Promise<PracticeWord[]> {
   return queue as PracticeWord[]
 }
 
-export async function postPracticeReview(word: string, result: 'know' | 'unknown'): Promise<void> {
+export async function postPracticeReview(word: string, rating: 1 | 2 | 3 | 4): Promise<void> {
   const res = await fetch(`${API_ENDPOINT}/practice/review`, {
     method: 'POST',
     headers: authHeaders,
-    body: JSON.stringify({ word, result }),
+    body: JSON.stringify({ word, rating }),
   })
   if (!res.ok) throw new Error(`POST /practice/review failed: ${res.status}`)
+}
+
+export async function fetchPracticeStats(): Promise<PracticeStats> {
+  const res = await fetch(`${API_ENDPOINT}/practice/stats`, { headers: authHeaders })
+  if (!res.ok) throw new Error(`GET /practice/stats failed: ${res.status}`)
+  return res.json()
 }

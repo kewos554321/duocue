@@ -4,24 +4,31 @@ import Layout from './components/Layout'
 import SentencesPage from './pages/SentencesPage'
 import WordBookPage from './pages/WordBookPage'
 import PracticePage from './pages/PracticePage'
-import { fetchSentences, fetchVideos, fetchWords, fetchPracticeQueue, patchWordStatus, deleteSentence, removeWord, postPracticeReview } from './api'
-import type { ApiSentence, ApiVideo, ApiWord, WordStatus, PracticeWord } from './types'
+import StatsPage from './pages/StatsPage'
+import {
+  fetchSentences, fetchVideos, fetchWords,
+  fetchPracticeQueue, fetchPracticeStats,
+  patchWordStatus, deleteSentence, removeWord, postPracticeReview,
+} from './api'
+import type { ApiSentence, ApiVideo, ApiWord, WordStatus, PracticeWord, PracticeStats } from './types'
 
 export default function App() {
   const [sentences, setSentences] = useState<ApiSentence[]>([])
   const [videos, setVideos] = useState<ApiVideo[]>([])
   const [words, setWords] = useState<ApiWord[]>([])
   const [practiceQueue, setPracticeQueue] = useState<PracticeWord[]>([])
+  const [stats, setStats] = useState<PracticeStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    Promise.all([fetchSentences(), fetchVideos(), fetchWords(), fetchPracticeQueue()])
-      .then(([s, v, w, q]) => {
+    Promise.all([fetchSentences(), fetchVideos(), fetchWords(), fetchPracticeQueue(), fetchPracticeStats()])
+      .then(([s, v, w, q, st]) => {
         setSentences(s)
         setVideos(v)
         setWords(w)
         setPracticeQueue(q)
+        setStats(st)
       })
       .catch(e => setError(String(e)))
       .finally(() => setLoading(false))
@@ -46,9 +53,10 @@ export default function App() {
     )
   }
 
-  const handleReview = async (word: string, result: 'know' | 'unknown') => {
-    await postPracticeReview(word, result)
+  const handleReview = async (word: string, rating: 1 | 2 | 3 | 4) => {
+    await postPracticeReview(word, rating)
     setPracticeQueue(prev => prev.filter(w => w.word !== word))
+    fetchPracticeStats().then(setStats).catch(() => {})
   }
 
   const wordMap = new Map(words.map(w => [w.word, w.status]))
@@ -86,6 +94,7 @@ export default function App() {
         <Route path="/sentences/all" element={<SentencesPage tab="all" {...sentenceProps} />} />
         <Route path="/words" element={<WordBookPage words={words} sentences={sentences} onUpdateWordStatus={updateWordStatus} onRemoveWord={handleRemoveWord} />} />
         <Route path="/practice" element={<PracticePage queue={practiceQueue} onReview={handleReview} />} />
+        <Route path="/stats" element={<StatsPage stats={stats} loading={false} />} />
       </Routes>
     </Layout>
   )
