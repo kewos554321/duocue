@@ -267,4 +267,62 @@ app.post('/practice/review', async (c) => {
   return c.json({ word: w, intervalDays: newInterval, nextReviewAt, graduated: newStatus === 'learned' })
 })
 
+app.get('/practice/stats', async (c) => {
+  const now = Math.floor(Date.now() / 1000)
+  const thirtyDaysAgo = now - 30 * 86400
+
+  const [last30, streakRows, wordCounts, todayRow] = await c.env.DB.batch([
+    c.env.DB.prepare(`
+      SELECT date(reviewed_at, 'unixepoch') AS date, COUNT(*) AS count
+      FROM reviews
+      WHERE reviewed_at >= ?
+      GROUP BY date
+      ORDER BY date ASC
+    `).bind(thirtyDaysAgo),
+
+    c.env.DB.prepare(`
+      SELECT date(reviewed_at, 'unixepoch') AS date
+      FROM reviews
+      GROUP BY date
+      ORDER BY date DESC
+    `),
+
+    c.env.DB.prepare(`
+      SELECT
+        SUM(CASE WHEN status = 'learning' THEN 1 ELSE 0 END) AS learning,
+        SUM(CASE WHEN status = 'learned'  THEN 1 ELSE 0 END) AS learned
+      FROM words
+    `),
+
+    c.env.DB.prepare(`
+      SELECT COUNT(*) AS count FROM reviews
+      WHERE reviewed_at >= unixepoch('now','start of day')
+    `),
+  ])
+
+  const dates = (streakRows.results as { date: string }[]).map(r => r.date)
+  const todayStr = new Date().toISOString().slice(0, 10)
+  const yesterdayStr = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
+
+  let streak = 0
+  if (dates.length > 0 && (dates[0] === todayStr || dates[0] === yesterdayStr)) {
+    streak = 1
+    for (let i = 1; i < dates.length; i++) {
+      const prev = new Date(dates[i - 1]).getTime()
+      const curr = new Date(dates[i]).getTime()
+      if ((prev - curr) / 86400000 === 1) streak++
+      else break
+    }
+  }
+
+  const counts = (wordCounts.results[0] as { learning: number; learned: number }) ?? { learning: 0, learned: 0 }
+
+  return c.json({
+    streak,
+    todayCount: (todayRow.results[0] as { count: number })?.count ?? 0,
+    wordCounts: { learning: counts.learning ?? 0, learned: counts.learned ?? 0 },
+    last30Days: last30.results as { date: string; count: number }[],
+  })
+})
+
 export default app
