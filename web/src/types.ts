@@ -1,5 +1,7 @@
 export type WordStatus = 'learning' | 'learned'
 
+export type PracticeRating = 1 | 2 | 3 | 4
+
 export interface ApiSentence {
   id: number
   text: string
