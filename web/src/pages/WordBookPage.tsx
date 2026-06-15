@@ -1,14 +1,16 @@
 import { useState } from 'react'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { useDefinition } from '../hooks/useDefinition'
-import type { ApiSentence, ApiWord } from '../types'
+import type { ApiSentence, ApiWord, WordStatus } from '../types'
 
 interface WordRowProps {
   word: ApiWord
   sentences: ApiSentence[]
+  onUpdateWordStatus: (word: string, status: WordStatus) => Promise<void>
+  onRemoveWord: (word: string) => Promise<void>
 }
 
-function WordRow({ word, sentences }: WordRowProps) {
+function WordRow({ word, sentences, onUpdateWordStatus, onRemoveWord }: WordRowProps) {
   const { definition, partOfSpeech } = useDefinition(word.word)
   const [expanded, setExpanded] = useState(false)
 
@@ -105,9 +107,11 @@ function WordRow({ word, sentences }: WordRowProps) {
 interface Props {
   words: ApiWord[]
   sentences: ApiSentence[]
+  onUpdateWordStatus: (word: string, status: WordStatus) => Promise<void>
+  onRemoveWord: (word: string) => Promise<void>
 }
 
-export default function WordBookPage({ words, sentences }: Props) {
+export default function WordBookPage({ words, sentences, onUpdateWordStatus, onRemoveWord }: Props) {
   const markedWords = words.filter(w => w.status === 'learning' || w.status === 'learned')
 
   if (markedWords.length === 0) {
@@ -138,7 +142,7 @@ export default function WordBookPage({ words, sentences }: Props) {
       </h2>
       <div className="flex flex-col gap-2.5">
         {markedWords.map(w => (
-          <WordRow key={w.word} word={w} sentences={sentences} />
+          <WordRow key={w.word} word={w} sentences={sentences} onUpdateWordStatus={onUpdateWordStatus} onRemoveWord={onRemoveWord} />
         ))}
       </div>
     </div>
