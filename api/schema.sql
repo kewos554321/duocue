@@ -48,3 +48,7 @@ CREATE TABLE IF NOT EXISTS reviews (
 );
 CREATE INDEX IF NOT EXISTS idx_reviews_word ON reviews(word);
 CREATE INDEX IF NOT EXISTS idx_reviews_date ON reviews(reviewed_at);
+
+-- Migration: AI sentence notes
+ALTER TABLE sentences ADD COLUMN ai_note TEXT;
+ALTER TABLE sentences ADD COLUMN ai_note_updated_at INTEGER;
