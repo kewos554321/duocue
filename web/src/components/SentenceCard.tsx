@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback } from 'react'
 import { createPortal } from 'react-dom'
-import { ExternalLink, X } from 'lucide-react'
+import { ExternalLink, X, Sparkles } from 'lucide-react'
 import type { ApiSentence, WordStatus } from '../types'
 import WordSpan from './WordSpan'
 
@@ -68,16 +68,17 @@ interface Props {
   onUpdateWordStatus: (word: string, status: WordStatus) => Promise<void>
   onRemoveWordStatus: (word: string) => Promise<void>
   onDelete: (id: number) => Promise<void>
+  onOpenAI: (sentence: ApiSentence) => void
   relativeTime?: string
 }
 
-const PLATFORM_COLOR: Record<string, string> = {
+export const PLATFORM_COLOR: Record<string, string> = {
   netflix: '#E50914',
   hbomax: '#5822B4',
   youtube: '#FF0000',
 }
 
-const PLATFORM_LABEL: Record<string, string> = {
+export const PLATFORM_LABEL: Record<string, string> = {
   netflix: 'Netflix',
   hbomax: 'HBO Max',
   youtube: 'YouTube',
@@ -110,7 +111,7 @@ function tokenize(text: string): Array<{ raw: string; isWord: boolean }> {
   }))
 }
 
-export default function SentenceCard({ sentence, wordMap, onUpdateWordStatus, onRemoveWordStatus, onDelete, relativeTime }: Props) {
+export default function SentenceCard({ sentence, wordMap, onUpdateWordStatus, onRemoveWordStatus, onDelete, onOpenAI, relativeTime }: Props) {
   const tokens = tokenize(sentence.text)
 
   const taggedWords = [
@@ -239,6 +240,22 @@ export default function SentenceCard({ sentence, wordMap, onUpdateWordStatus, on
             ))}
           </div>
         )}
+
+        <div className="flex justify-end mt-2.5">
+          <button
+            onClick={() => onOpenAI(sentence)}
+            className="flex items-center gap-1 text-[11px] rounded-full px-2.5 py-1 transition-opacity hover:opacity-70"
+            style={
+              sentence.aiNote
+                ? { background: 'rgba(191,90,242,0.12)', color: 'var(--ios-purple)' }
+                : { background: 'rgba(120,120,128,0.1)', color: 'var(--text-secondary)' }
+            }
+            aria-label={sentence.aiNote ? '查看 AI 筆記' : '詢問 AI'}
+          >
+            <Sparkles size={11} strokeWidth={2} />
+            {sentence.aiNote ? '筆記 ✓' : 'Ask AI'}
+          </button>
+        </div>
       </div>
     </div>
   )

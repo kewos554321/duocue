@@ -11,6 +11,17 @@ export interface ApiSentence {
   videoUrl: string
   videoTitle: string | null
   createdAt: string
+  aiNote: string | null
+  aiNoteUpdatedAt: number | null
+}
+
+export interface ChatMessage {
+  role: 'user' | 'assistant'
+  content: string
+}
+
+export interface ApiSettings {
+  hasGeminiKey: boolean
 }
 
 export interface ApiVideo {

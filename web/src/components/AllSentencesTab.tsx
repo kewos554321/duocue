@@ -48,9 +48,10 @@ interface Props {
   onUpdateWordStatus: (word: string, status: WordStatus) => Promise<void>
   onRemoveWordStatus: (word: string) => Promise<void>
   onDeleteSentence: (id: number) => Promise<void>
+  onOpenAI: (sentence: ApiSentence) => void
 }
 
-export default function AllSentencesTab({ sentences, videos, wordMap, onUpdateWordStatus, onRemoveWordStatus, onDeleteSentence }: Props) {
+export default function AllSentencesTab({ sentences, videos, wordMap, onUpdateWordStatus, onRemoveWordStatus, onDeleteSentence, onOpenAI }: Props) {
   const [searchParams, setSearchParams] = useSearchParams()
   const [currentPage, setCurrentPage] = useState(1)
   const [localVideos, setLocalVideos] = useState<ApiVideo[]>(videos)
@@ -280,6 +281,7 @@ export default function AllSentencesTab({ sentences, videos, wordMap, onUpdateWo
                 onUpdateWordStatus={onUpdateWordStatus}
                 onRemoveWordStatus={onRemoveWordStatus}
                 onDelete={onDeleteSentence}
+                onOpenAI={onOpenAI}
               />
             ))}
           </div>
