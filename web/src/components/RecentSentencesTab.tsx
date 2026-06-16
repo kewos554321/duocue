@@ -9,9 +9,10 @@ interface Props {
   onUpdateWordStatus: (word: string, status: WordStatus) => Promise<void>
   onRemoveWordStatus: (word: string) => Promise<void>
   onDeleteSentence: (id: number) => Promise<void>
+  onOpenAI: (sentence: ApiSentence) => void
 }
 
-export default function RecentSentencesTab({ sentences, wordMap, onUpdateWordStatus, onRemoveWordStatus, onDeleteSentence }: Props) {
+export default function RecentSentencesTab({ sentences, wordMap, onUpdateWordStatus, onRemoveWordStatus, onDeleteSentence, onOpenAI }: Props) {
   const recent = useMemo(
     () =>
       [...sentences]
@@ -41,6 +42,7 @@ export default function RecentSentencesTab({ sentences, wordMap, onUpdateWordSta
           onUpdateWordStatus={onUpdateWordStatus}
           onRemoveWordStatus={onRemoveWordStatus}
           onDelete={onDeleteSentence}
+          onOpenAI={onOpenAI}
           relativeTime={formatRelativeTime(s.createdAt)}
         />
       ))}
