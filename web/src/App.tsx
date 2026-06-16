@@ -5,11 +5,14 @@ import SentencesPage from './pages/SentencesPage'
 import WordBookPage from './pages/WordBookPage'
 import PracticePage from './pages/PracticePage'
 import StatsPage from './pages/StatsPage'
+import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
 import {
   fetchSentences, fetchVideos, fetchWords,
   fetchPracticeQueue, fetchPracticeStats,
   patchWordStatus, deleteSentence, removeWord, postPracticeReview,
 } from './api'
+import { getToken } from './auth'
 import type { ApiSentence, ApiVideo, ApiWord, WordStatus, PracticeWord, PracticeStats } from './types'
 
 export default function App() {
@@ -22,6 +25,10 @@ export default function App() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (!getToken()) {
+      setLoading(false)
+      return
+    }
     Promise.all([fetchSentences(), fetchVideos(), fetchWords(), fetchPracticeQueue(), fetchPracticeStats()])
       .then(([s, v, w, q, st]) => {
         setSentences(s)
@@ -61,6 +68,16 @@ export default function App() {
 
   const wordMap = new Map(words.map(w => [w.word, w.status]))
 
+  if (!getToken()) {
+    return (
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    )
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-black text-white/40 text-sm">
@@ -89,6 +106,8 @@ export default function App() {
   return (
     <Layout sentences={sentences} words={words} practiceQueueCount={practiceQueue.length}>
       <Routes>
+        <Route path="/login" element={<Navigate to="/" replace />} />
+        <Route path="/register" element={<Navigate to="/" replace />} />
         <Route path="/" element={<Navigate to="/sentences/recent" replace />} />
         <Route path="/sentences/recent" element={<SentencesPage tab="recent" {...sentenceProps} />} />
         <Route path="/sentences/all" element={<SentencesPage tab="all" {...sentenceProps} />} />
