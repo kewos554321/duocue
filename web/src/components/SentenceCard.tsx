@@ -250,6 +250,7 @@ export default function SentenceCard({ sentence, wordMap, onUpdateWordStatus, on
                 ? { background: 'rgba(191,90,242,0.12)', color: 'var(--ios-purple)' }
                 : { background: 'rgba(120,120,128,0.1)', color: 'var(--text-secondary)' }
             }
+            aria-label={sentence.aiNote ? '查看 AI 筆記' : '詢問 AI'}
           >
             <Sparkles size={11} strokeWidth={2} />
             {sentence.aiNote ? '筆記 ✓' : 'Ask AI'}
