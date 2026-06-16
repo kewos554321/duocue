@@ -237,12 +237,12 @@ Multi-turn AI conversation about a sentence.
 中文翻譯：{sentence.translation}
 ```
 
-**Response:** streamed SSE (Server-Sent Events), each chunk is a JSON object `{ "delta": "..." }`. Final chunk: `{ "done": true }`.
+**Response:** streamed SSE (Server-Sent Events), each chunk is a JSON object `{ "delta": "..." }`. Final chunk: `{ "done": true }`. If no Gemini key is configured, responds `400 { "error": "GEMINI_KEY_MISSING" }` instead of opening a stream.
 
-**Claude model:** `claude-haiku-4-5` (fast and cheap for conversational turns).  
-**Streaming:** use `@anthropic-ai/sdk` with `client.messages.stream(...)`.
+**Gemini model:** `gemini-2.5-flash` (fast and cheap for conversational turns).
+**Streaming:** use `@google/genai`'s `ai.models.generateContentStream(...)`.
 
-**Implementation note:** The Anthropic API key is stored in Cloudflare Workers secret (`ANTHROPIC_API_KEY`), never exposed to the frontend.
+**Implementation note (superseded 2026-06-16):** The Gemini API key is **not** a Cloudflare Workers secret. It is user-supplied via a Settings page in the web app and stored in a new `settings` D1 table (single row, key `gemini_api_key`). The backend loads it from D1 on every AI-calling request. See §5.6/§6.6 below. AI features are disabled in the UI until a key is saved.
 
 ### 5.2 `POST /sentences/:id/note`
 
@@ -282,9 +282,9 @@ Generate a note summary from the conversation (for "整理成筆記").
 }
 ```
 
-**Response:** `{ "draft": "• except when = ...\n• shut up vs..." }` (non-streaming — summary is short enough).
+**Response:** `{ "draft": "• except when = ...\n• shut up vs..." }` (non-streaming — summary is short enough). If no Gemini key is configured, responds `400 { "error": "GEMINI_KEY_MISSING" }`.
 
-**Claude model:** `claude-haiku-4-5`.
+**Gemini model:** `gemini-2.5-flash`.
 
 ### 5.5 `GET /notes`
 
@@ -313,6 +313,22 @@ Return all sentences that have a non-null `ai_note`.
 
 SQL: `SELECT ... FROM sentences WHERE ai_note IS NOT NULL ORDER BY ai_note_updated_at DESC`.
 
+### 5.6 `GET /settings` *(added 2026-06-16)*
+
+Returns whether a Gemini key is currently configured. The key value itself is never returned to the client.
+
+**Response:** `{ "hasGeminiKey": true }`
+
+### 5.7 `POST /settings` *(added 2026-06-16)*
+
+Saves (creates or overwrites) the Gemini API key.
+
+**Request body:** `{ "geminiApiKey": "AIza..." }`
+
+**Response:** `{ "ok": true }`
+
+Upserts the `settings` table row where `key = 'gemini_api_key'`.
+
 ---
 
 ## 6. Frontend Architecture
@@ -323,16 +339,34 @@ SQL: `SELECT ... FROM sentences WHERE ai_note IS NOT NULL ORDER BY ai_note_updat
 |---|---|
 | `web/src/components/SentenceAISheet.tsx` | Bottom sheet component with chat UI, note draft, delete |
 | `web/src/pages/NotesPage.tsx` | Notes top-level page |
+| `web/src/pages/SettingsPage.tsx` | *(added 2026-06-16)* Profile-style settings page for entering/saving the Gemini API key |
 
 ### 6.2 Modified Files
 
 | File | Change |
 |---|---|
 | `web/src/components/SentenceCard.tsx` | Add "Ask AI" button; add "筆記 ✓" badge when `aiNote` present |
-| `web/src/types.ts` | Add `aiNote`, `aiNoteUpdatedAt` to `ApiSentence`; add `ApiNote` |
-| `web/src/api.ts` | Add `postAiChat`, `postNoteSummarize`, `saveNote`, `deleteNote`, `getNotes` |
-| `web/src/App.tsx` | Add `NotesPage` route; render `SentenceAISheet` portal; pass sheet open/close state |
-| `web/src/Sidebar.tsx` (or nav component) | Add "筆記" nav item with pencil icon |
+| `web/src/types.ts` | Add `aiNote`, `aiNoteUpdatedAt` to `ApiSentence`; add `ApiNote`; add `ApiSettings` |
+| `web/src/api.ts` | Add `streamAiChat`, `postNoteSummarize`, `saveNote`, `deleteNote`, `getNotes`, `getSettings`, `saveGeminiKey` |
+| `web/src/App.tsx` | Add `NotesPage` and `SettingsPage` routes; render `SentenceAISheet` portal; pass sheet open/close state; load `hasGeminiKey` on mount |
+| `web/src/Sidebar.tsx` (or nav component) | Add "筆記" nav item with pencil icon; add "設定" nav item with gear icon |
+
+### 6.6 Settings Page *(added 2026-06-16)*
+
+A profile-style settings page (centered icon header + card-based form, similar to an account/profile screen) at route `/settings`:
+
+- Header: circular icon avatar (gear/key icon, purple tint) + page title "設定" + subtitle "管理你的 AI 設定".
+- Card: label "Gemini API Key", a password-style `<input type="password">` (with show/hide toggle), helper text linking to where to get a key (https://aistudio.google.com/apikey), and a "儲存" button.
+- Status row above the input: green dot + "已設定" if `hasGeminiKey` is true, gray dot + "尚未設定" if false.
+- On save: `POST /settings`, then re-fetch `GET /settings` to refresh status; show a brief "已儲存 ✓" confirmation.
+- The key itself is write-only from the client's perspective — once saved, the input is cleared and only the status row shows; there is no "view saved key" affordance (matches the API never returning the raw key).
+
+### 6.7 AI-disabled gating *(added 2026-06-16)*
+
+`SentenceAISheet` calls `GET /settings` itself in a `useEffect` keyed on `isOpen` (re-checks every time the sheet opens, so key status is always fresh — no stale state to lift into `App.tsx` or invalidate after a Settings save):
+
+- If `hasGeminiKey` comes back false, instead of the chat UI the sheet shows a centered message: "請先設定 Gemini API Key 才能使用 AI 解析" with a button "前往設定" that navigates to `/settings` and closes the sheet.
+- The "Ask AI" button on `SentenceCard` remains visible regardless (so users discover the feature); the gating happens inside the sheet, not by hiding the entry point.
 
 ### 6.3 `SentenceAISheet` Props
 
@@ -345,6 +379,8 @@ interface SentenceAISheetProps {
   onNoteDeleted: () => void
 }
 ```
+
+Note: `hasGeminiKey` is not a prop — the sheet fetches it itself via `GET /settings` on open (see §6.7).
 
 ### 6.4 Chat State (inside `SentenceAISheet`)
 
@@ -382,11 +418,12 @@ const getPlatformColor = (platform: string) =>
 
 Cloudflare Workers supports streaming via `TransformStream` and `ReadableStream`. The `/sentences/:id/ai-chat` route must:
 
-1. Instantiate `@anthropic-ai/sdk`'s `Anthropic` client with `apiKey: c.env.ANTHROPIC_API_KEY`.
-2. Call `client.messages.stream({ model: 'claude-haiku-4-5', max_tokens: 1024, system: '...', messages })`.
-3. Pipe each `text_delta` event as an SSE chunk: `data: {"delta":"..."}\n\n`.
-4. Send `data: {"done":true}\n\n` on stream end.
-5. Return `new Response(readable, { headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' } })`.
+1. Load the Gemini key from the `settings` D1 table; if missing, return `400 { "error": "GEMINI_KEY_MISSING" }` without opening a stream.
+2. Instantiate `@google/genai`'s `GoogleGenAI` client with `apiKey: <key from DB>`.
+3. Call `ai.models.generateContentStream({ model: 'gemini-2.5-flash', contents: [...], config: { systemInstruction: '...' } })`, mapping `ChatMessage.role` (`'user'|'assistant'`) to Gemini's `role` (`'user'|'model'`).
+4. Pipe each chunk's `.text` as an SSE chunk: `data: {"delta":"..."}\n\n`.
+5. Send `data: {"done":true}\n\n` on stream end.
+6. Return `new Response(readable, { headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' } })`.
 
 ---
 
@@ -406,7 +443,8 @@ Cloudflare Workers supports streaming via `TransformStream` and `ReadableStream`
 |---|---|
 | Navigation pattern for AI detail | Bottom sheet (iOS-style), not a new page |
 | Note storage | Single `ai_note TEXT` column on `sentences` table |
-| AI model | `claude-haiku-4-5` for chat and summarization |
+| AI provider/model | *(changed 2026-06-16)* Google Gemini, `gemini-2.5-flash`, via `@google/genai` — not Anthropic |
+| AI key storage | *(added 2026-06-16)* User-supplied via a Settings page, stored in D1 `settings` table — not a Workers secret |
 | Note grouping in NotesPage | By `platform + videoTitle` |
 | Delete confirmation | Inline confirmation (not a modal dialog) |
 | Client-side vs server-side search | Client-side (notes list is small) |
