@@ -245,13 +245,14 @@ app.patch('/videos', async (c) => {
 })
 
 app.get('/practice/queue', async (c) => {
+  const userId = c.get('userId')
   const { results: words } = await c.env.DB.prepare(`
     SELECT word, interval_days AS intervalDays, next_review_at AS nextReviewAt
     FROM words
-    WHERE status = 'learning'
+    WHERE user_id = ? AND status = 'learning'
       AND (next_review_at IS NULL OR next_review_at <= unixepoch())
     ORDER BY COALESCE(next_review_at, 0) ASC, word ASC
-  `).all<{ word: string; intervalDays: number; nextReviewAt: number | null }>()
+  `).bind(userId).all<{ word: string; intervalDays: number; nextReviewAt: number | null }>()
 
   if (words.length === 0) return c.json({ queue: [] })
 
@@ -259,12 +260,13 @@ app.get('/practice/queue', async (c) => {
     c.env.DB.prepare(`
       SELECT s.text, s.translation, v.url AS videoUrl, s.timestamp_s AS timestampS
       FROM sentences s JOIN videos v ON v.id = s.video_id
-      WHERE LOWER(s.text) LIKE '% ' || LOWER(?) || ' %'
+      WHERE s.user_id = ?
+        AND (LOWER(s.text) LIKE '% ' || LOWER(?) || ' %'
          OR LOWER(s.text) LIKE LOWER(?) || ' %'
          OR LOWER(s.text) LIKE '% ' || LOWER(?)
-         OR LOWER(s.text) = LOWER(?)
+         OR LOWER(s.text) = LOWER(?))
       ORDER BY RANDOM() LIMIT 1
-    `).bind(w.word, w.word, w.word, w.word)
+    `).bind(userId, w.word, w.word, w.word, w.word)
   )
 
   const sentenceResults = await c.env.DB.batch(stmts)
@@ -330,9 +332,10 @@ app.post('/practice/review', async (c) => {
   const w = word.toLowerCase()
   const r = rating as 1 | 2 | 3 | 4
 
+  const userId = c.get('userId')
   const current = await c.env.DB.prepare(
-    `SELECT interval_days, repetitions, ease_factor FROM words WHERE word = ?`
-  ).bind(w).first<{ interval_days: number; repetitions: number; ease_factor: number }>()
+    `SELECT interval_days, repetitions, ease_factor FROM words WHERE word = ? AND user_id = ?`
+  ).bind(w, userId).first<{ interval_days: number; repetitions: number; ease_factor: number }>()
 
   if (!current) return c.json({ error: 'Word not found' }, 404)
 
@@ -348,11 +351,11 @@ app.post('/practice/review', async (c) => {
 
   await c.env.DB.batch([
     c.env.DB.prepare(
-      `UPDATE words SET interval_days = ?, next_review_at = ?, ease_factor = ?, repetitions = ?, status = ? WHERE word = ?`
-    ).bind(newInterval, nextReviewAt, newEaseFactor, newRepetitions, newStatus, w),
+      `UPDATE words SET interval_days = ?, next_review_at = ?, ease_factor = ?, repetitions = ?, status = ? WHERE word = ? AND user_id = ?`
+    ).bind(newInterval, nextReviewAt, newEaseFactor, newRepetitions, newStatus, w, userId),
     c.env.DB.prepare(
-      `INSERT INTO reviews (word, rating, reviewed_at, interval_before, interval_after) VALUES (?, ?, ?, ?, ?)`
-    ).bind(w, r, Math.floor(Date.now() / 1000), current.interval_days, newInterval),
+      `INSERT INTO reviews (user_id, word, rating, reviewed_at, interval_before, interval_after) VALUES (?, ?, ?, ?, ?, ?)`
+    ).bind(userId, w, r, Math.floor(Date.now() / 1000), current.interval_days, newInterval),
   ])
 
   return c.json({ word: w, intervalDays: newInterval, nextReviewAt, graduated: newStatus === 'learned' })
@@ -362,33 +365,36 @@ app.get('/practice/stats', async (c) => {
   const now = Math.floor(Date.now() / 1000)
   const thirtyDaysAgo = now - 30 * 86400
 
+  const userId = c.get('userId')
   const [last30, streakRows, wordCounts, todayRow] = await c.env.DB.batch([
     c.env.DB.prepare(`
       SELECT date(reviewed_at, 'unixepoch') AS date, COUNT(*) AS count
       FROM reviews
-      WHERE reviewed_at >= ?
+      WHERE user_id = ? AND reviewed_at >= ?
       GROUP BY date
       ORDER BY date ASC
-    `).bind(thirtyDaysAgo),
+    `).bind(userId, thirtyDaysAgo),
 
     c.env.DB.prepare(`
       SELECT date(reviewed_at, 'unixepoch') AS date
       FROM reviews
+      WHERE user_id = ?
       GROUP BY date
       ORDER BY date DESC
-    `),
+    `).bind(userId),
 
     c.env.DB.prepare(`
       SELECT
         SUM(CASE WHEN status = 'learning' THEN 1 ELSE 0 END) AS learning,
         SUM(CASE WHEN status = 'learned'  THEN 1 ELSE 0 END) AS learned
       FROM words
-    `),
+      WHERE user_id = ?
+    `).bind(userId),
 
     c.env.DB.prepare(`
       SELECT COUNT(*) AS count FROM reviews
-      WHERE reviewed_at >= unixepoch('now','start of day')
-    `),
+      WHERE user_id = ? AND reviewed_at >= unixepoch('now','start of day')
+    `).bind(userId),
   ])
 
   const dates = (streakRows.results as { date: string }[]).map(r => r.date)
