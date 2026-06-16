@@ -34,10 +34,10 @@ const targetLangSelect    = document.getElementById('targetLangSelect')
 const sourceLangRow       = document.getElementById('sourceLangRow')
 const sourceLangAutoRow   = document.getElementById('sourceLangAutoRow')
 const expToggle   = document.getElementById('expToggle')
-const expEndpoint = document.getElementById('expEndpoint')
 const expApiKey   = document.getElementById('expApiKey')
 const expEyeBtn   = document.getElementById('expEyeBtn')
 const expFields   = document.getElementById('expFields')
+const DUOCUE_API_ENDPOINT = 'https://duocue-api.kewos554321.workers.dev'
 
 // ── Platform status indicator ─────────────────────────────────────────────
 const WATCH_PATTERNS = [
@@ -462,14 +462,14 @@ function setKeyStatus(isSet) {
 }
 
 // ── Experimental settings ─────────────────────────────────────────────────
-chrome.storage.local.get(['experimentalMode', 'apiEndpoint', 'apiKey'], ({ experimentalMode, apiEndpoint, apiKey }) => {
+chrome.storage.local.set({ apiEndpoint: DUOCUE_API_ENDPOINT })
+chrome.storage.local.get(['experimentalMode', 'apiKey'], ({ experimentalMode, apiKey }) => {
   if (experimentalMode) {
     expToggle.classList.add('on')
     expFields.style.opacity = '1'
     expFields.style.pointerEvents = ''
     document.getElementById('summaryExp').textContent = '開啟'
   }
-  if (apiEndpoint) expEndpoint.value = apiEndpoint
   if (apiKey) expApiKey.value = apiKey
 })
 
@@ -479,10 +479,6 @@ expToggle.addEventListener('click', () => {
   expFields.style.pointerEvents = isOn ? '' : 'none'
   document.getElementById('summaryExp').textContent = isOn ? '開啟' : '關閉'
   chrome.storage.local.set({ experimentalMode: isOn })
-})
-
-expEndpoint.addEventListener('blur', () => {
-  chrome.storage.local.set({ apiEndpoint: expEndpoint.value.trim() })
 })
 
 expApiKey.addEventListener('blur', () => {
