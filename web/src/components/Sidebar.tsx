@@ -1,5 +1,5 @@
 import { Link, useMatch } from 'react-router-dom'
-import { BookOpen, BookMarked, Sparkles, BarChart2 } from 'lucide-react'
+import { BookOpen, BookMarked, Sparkles, BarChart2, Pencil, Settings } from 'lucide-react'
 import type { ApiSentence, ApiWord } from '../types'
 
 interface Props {
@@ -15,6 +15,8 @@ export default function Sidebar({ sentences, words, practiceQueueCount }: Props)
   const wordsActive = !!useMatch('/words')
   const practiceActive = !!useMatch('/practice')
   const statsActive = !!useMatch('/stats')
+  const notesActive = !!useMatch('/notes')
+  const settingsActive = !!useMatch('/settings')
 
   const navBase = 'w-full text-left px-3 py-2 rounded-xl text-[14px] flex items-center justify-between transition-all duration-150 active:scale-[0.98]'
 
@@ -101,6 +103,32 @@ export default function Sidebar({ sentences, words, practiceQueueCount }: Props)
           <span className="flex items-center gap-2.5">
             <BarChart2 size={16} strokeWidth={1.8} />
             統計
+          </span>
+        </Link>
+
+        <Link
+          to="/notes"
+          className={`${navBase} ${notesActive ? 'font-medium' : ''}`}
+          style={navStyle(notesActive)}
+          onMouseEnter={e => handleMouseEnter(e, notesActive)}
+          onMouseLeave={e => handleMouseLeave(e, notesActive)}
+        >
+          <span className="flex items-center gap-2.5">
+            <Pencil size={16} strokeWidth={1.8} />
+            筆記
+          </span>
+        </Link>
+
+        <Link
+          to="/settings"
+          className={`${navBase} ${settingsActive ? 'font-medium' : ''}`}
+          style={navStyle(settingsActive)}
+          onMouseEnter={e => handleMouseEnter(e, settingsActive)}
+          onMouseLeave={e => handleMouseLeave(e, settingsActive)}
+        >
+          <span className="flex items-center gap-2.5">
+            <Settings size={16} strokeWidth={1.8} />
+            設定
           </span>
         </Link>
       </nav>
