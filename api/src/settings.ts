@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
-import type { Bindings } from './index'
+import type { Bindings, Variables } from './index'
 
-export function registerSettingsRoutes(app: Hono<{ Bindings: Bindings }>) {
+export function registerSettingsRoutes(app: Hono<{ Bindings: Bindings; Variables: Variables }>) {
   app.get('/settings', async (c) => {
     const row = await c.env.DB.prepare(
       `SELECT value FROM settings WHERE key = 'gemini_api_key'`
