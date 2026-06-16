@@ -1,22 +1,111 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
+import { hashPassword, verifyPassword, generateToken } from './auth'
 
 type Bindings = {
   DB: D1Database
-  API_KEY: string
 }
 
-const app = new Hono<{ Bindings: Bindings }>()
+type Variables = {
+  userId: number
+  token: string
+}
+
+const app = new Hono<{ Bindings: Bindings; Variables: Variables }>()
 
 app.use('*', cors())
 
+const PUBLIC_PATHS = new Set(['/auth/register', '/auth/login'])
+
 app.use('*', async (c, next) => {
   if (c.req.method === 'OPTIONS') return next()
+  if (PUBLIC_PATHS.has(c.req.path)) return next()
+
   const auth = c.req.header('Authorization')
-  if (!auth || auth !== `Bearer ${c.env.API_KEY}`) {
+  const token = auth?.startsWith('Bearer ') ? auth.slice(7) : null
+  if (!token) return c.json({ error: 'Unauthorized' }, 401)
+
+  const session = await c.env.DB.prepare(
+    `SELECT user_id, expires_at FROM sessions WHERE token = ?`
+  ).bind(token).first<{ user_id: number; expires_at: string }>()
+
+  if (!session || new Date(session.expires_at) < new Date()) {
     return c.json({ error: 'Unauthorized' }, 401)
   }
+
+  c.set('token', token)
+  c.set('userId', session.user_id)
   await next()
+})
+
+function newExpiry(): string {
+  return new Date(Date.now() + 30 * 86400 * 1000).toISOString()
+}
+
+app.post('/auth/register', async (c) => {
+  let body: { email?: string; password?: string }
+  try {
+    body = await c.req.json()
+  } catch {
+    return c.json({ error: 'Invalid JSON body' }, 400)
+  }
+
+  const email = body.email?.trim().toLowerCase()
+  const password = body.password
+  if (!email || !password) {
+    return c.json({ error: 'email and password are required' }, 400)
+  }
+
+  const existing = await c.env.DB.prepare(`SELECT id FROM users WHERE email = ?`).bind(email).first()
+  if (existing) return c.json({ error: 'Email already registered' }, 409)
+
+  const passwordHash = await hashPassword(password)
+  const result = await c.env.DB.prepare(
+    `INSERT INTO users (email, password_hash) VALUES (?, ?)`
+  ).bind(email, passwordHash).run()
+  const userId = result.meta.last_row_id
+
+  const token = generateToken()
+  await c.env.DB.prepare(
+    `INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, ?)`
+  ).bind(token, userId, newExpiry()).run()
+
+  return c.json({ token }, 201)
+})
+
+app.post('/auth/login', async (c) => {
+  let body: { email?: string; password?: string }
+  try {
+    body = await c.req.json()
+  } catch {
+    return c.json({ error: 'Invalid JSON body' }, 400)
+  }
+
+  const email = body.email?.trim().toLowerCase()
+  const password = body.password
+  if (!email || !password) {
+    return c.json({ error: 'email and password are required' }, 400)
+  }
+
+  const user = await c.env.DB.prepare(
+    `SELECT id, password_hash FROM users WHERE email = ?`
+  ).bind(email).first<{ id: number; password_hash: string | null }>()
+
+  if (!user || !user.password_hash || !(await verifyPassword(password, user.password_hash))) {
+    return c.json({ error: 'Invalid email or password' }, 401)
+  }
+
+  const token = generateToken()
+  await c.env.DB.prepare(
+    `INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, ?)`
+  ).bind(token, user.id, newExpiry()).run()
+
+  return c.json({ token })
+})
+
+app.post('/auth/logout', async (c) => {
+  await c.env.DB.prepare(`DELETE FROM sessions WHERE token = ?`).bind(c.get('token')).run()
+  return c.body(null, 204)
 })
 
 app.post('/sentences', async (c) => {
