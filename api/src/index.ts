@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { registerNoteRoutes } from './notes'
+import { registerSettingsRoutes } from './settings'
 
 export type Bindings = {
   DB: D1Database
@@ -329,5 +330,6 @@ app.get('/practice/stats', async (c) => {
 })
 
 registerNoteRoutes(app)
+registerSettingsRoutes(app)
 
 export default app
