@@ -300,6 +300,7 @@ export default function SentenceAISheet({ sentence, isOpen, onClose, onNoteSaved
               <button
                 onClick={handleSend}
                 disabled={streaming || !input.trim()}
+                aria-label="傳送"
                 className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
                 style={{ background: 'var(--ios-blue)', opacity: streaming || !input.trim() ? 0.4 : 1 }}
               >
