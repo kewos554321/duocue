@@ -154,6 +154,8 @@ export function registerNoteRoutes(app: Hono<{ Bindings: Bindings }>) {
     return c.json({ ok: true })
   })
 
+  // The web app derives its notes list from the already-loaded /sentences data instead of
+  // calling this endpoint, to avoid a second fetch. Kept for other future clients.
   app.get('/notes', async (c) => {
     const { results } = await c.env.DB.prepare(`
       SELECT s.id              AS sentenceId,
