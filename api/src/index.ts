@@ -8,7 +8,7 @@ export type Bindings = {
   GEMINI_API_KEY: string
 }
 
-type Variables = {
+export type Variables = {
   userId: number
   token: string
 }
