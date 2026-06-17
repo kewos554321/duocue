@@ -2,10 +2,12 @@ import { useState } from 'react'
 import type { ReactNode } from 'react'
 import Sidebar from './Sidebar'
 import { useTheme } from '../hooks/useTheme'
-import { Sun, Moon, LogOut, KeyRound } from 'lucide-react'
+import { Sun, Moon, LogOut, KeyRound, X } from 'lucide-react'
 import { logout } from '../api'
 import { getToken, clearToken } from '../auth'
 import type { ApiSentence, ApiWord } from '../types'
+
+const BANNER_KEY = 'duocue_token_banner_dismissed'
 
 interface Props {
   sentences: ApiSentence[]
@@ -18,12 +20,19 @@ interface Props {
 export default function Layout({ sentences, words, practiceQueueCount, dimmed, children }: Props) {
   const { theme, toggleTheme } = useTheme()
   const [copied, setCopied] = useState(false)
+  const [showBanner, setShowBanner] = useState(() => !localStorage.getItem(BANNER_KEY))
+
+  const dismissBanner = () => {
+    localStorage.setItem(BANNER_KEY, '1')
+    setShowBanner(false)
+  }
 
   const handleCopyToken = async () => {
     const token = getToken()
     if (!token) return
     await navigator.clipboard.writeText(token)
     setCopied(true)
+    dismissBanner()
     setTimeout(() => setCopied(false), 1500)
   }
 
@@ -78,6 +87,40 @@ export default function Layout({ sentences, words, practiceQueueCount, dimmed, c
           </button>
         </div>
       </header>
+
+      {showBanner && (
+        <div
+          className="shrink-0 flex items-center justify-between gap-3 px-5 py-2.5 border-b"
+          style={{
+            background: 'rgba(10, 132, 255, 0.07)',
+            borderColor: 'rgba(10, 132, 255, 0.18)',
+          }}
+        >
+          <span className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+            在 Chrome 插件開啟「句子收集」功能前，先複製你的個人 Token
+          </span>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={handleCopyToken}
+              className="px-3 h-7 rounded-md text-xs font-semibold transition-colors"
+              style={{
+                background: copied ? '#30D158' : '#0A84FF',
+                color: '#fff',
+              }}
+            >
+              {copied ? '已複製！' : '複製 Token'}
+            </button>
+            <button
+              onClick={dismissBanner}
+              className="w-6 h-6 flex items-center justify-center rounded-full transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+              aria-label="關閉"
+              style={{ color: 'var(--text-tertiary)' }}
+            >
+              <X size={13} />
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-1 overflow-hidden">
         <Sidebar

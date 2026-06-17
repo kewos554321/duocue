@@ -157,8 +157,9 @@
       font-size: 13px;
     }
     .field-status { font-size: 12px; }
-    .field-status.set   { color: #30D158; }
-    .field-status.unset { color: #FF9F0A; }
+    .field-status.set      { color: #30D158; }
+    .field-status.unset    { color: #FF453A; }
+    .field-status.checking { color: #8E8E93; }
 
     .input-wrap { position: relative; }
     .input-wrap input {
@@ -691,13 +692,17 @@
         </div>
         <div id="expFields" style="opacity:0.4;pointer-events:none;display:flex;flex-direction:column;gap:12px">
           <div>
-            <span class="field-label">個人 Token</span>
+            <div class="field-header">
+              <span class="field-label">個人 Token</span>
+              <span class="field-status" id="tokenStatus"></span>
+            </div>
             <div class="input-wrap" style="margin-top:6px">
-              <input type="password" id="expApiKey" placeholder="到網頁登入後複製貼上">
+              <input type="password" id="expApiKey" placeholder="貼上從網頁複製的 Token">
               <span class="eye-btn" id="expEyeBtn">
                 <svg width="17" height="17" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 3.5C4.5 3.5 1.5 8 1.5 8C1.5 8 4.5 12.5 8 12.5C11.5 12.5 14.5 8 14.5 8C14.5 8 11.5 3.5 8 3.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.3"/></svg>
               </span>
             </div>
+            <button id="getTokenBtn" style="margin-top:6px;background:none;border:none;color:#0A84FF;font-size:12px;font-family:inherit;cursor:pointer;padding:0;">前往網頁取得 Token →</button>
           </div>
         </div>
         <button id="openWebBtn" style="width:100%;height:38px;background:#2C2C2E;border:1px solid #3A3A3C;color:#0A84FF;border-radius:10px;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;transition:opacity 0.15s;" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">開啟練習頁面 →</button>

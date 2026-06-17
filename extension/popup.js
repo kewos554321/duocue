@@ -462,6 +462,33 @@ function setKeyStatus(isSet) {
 }
 
 // ── Experimental settings ─────────────────────────────────────────────────
+function setTokenStatus(state) {
+  const el = document.getElementById('tokenStatus')
+  el.className = 'field-status'
+  const map = {
+    empty:    ['', ''],
+    checking: ['驗證中...', 'checking'],
+    valid:    ['✓ 已連線', 'set'],
+    invalid:  ['Token 無效', 'unset'],
+  }
+  const [text, cls] = map[state] ?? map.empty
+  el.textContent = text
+  if (cls) el.classList.add(cls)
+}
+
+async function validateToken(token) {
+  try {
+    const res = await fetch(`${DUOCUE_API_ENDPOINT}/sentences/latest`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    setTokenStatus(res.ok ? 'valid' : 'invalid')
+  } catch {
+    setTokenStatus('invalid')
+  }
+}
+
+let tokenValidateTimer = null
+
 chrome.storage.local.set({ apiEndpoint: DUOCUE_API_ENDPOINT })
 chrome.storage.local.get(['experimentalMode', 'apiKey'], ({ experimentalMode, apiKey }) => {
   if (experimentalMode) {
@@ -470,7 +497,10 @@ chrome.storage.local.get(['experimentalMode', 'apiKey'], ({ experimentalMode, ap
     expFields.style.pointerEvents = ''
     document.getElementById('summaryExp').textContent = '開啟'
   }
-  if (apiKey) expApiKey.value = apiKey
+  if (apiKey) {
+    expApiKey.value = apiKey
+    if (experimentalMode) validateToken(apiKey)
+  }
 })
 
 expToggle.addEventListener('click', () => {
@@ -479,14 +509,24 @@ expToggle.addEventListener('click', () => {
   expFields.style.pointerEvents = isOn ? '' : 'none'
   document.getElementById('summaryExp').textContent = isOn ? '開啟' : '關閉'
   chrome.storage.local.set({ experimentalMode: isOn })
+  if (isOn && expApiKey.value.trim()) validateToken(expApiKey.value.trim())
 })
 
-expApiKey.addEventListener('blur', () => {
-  chrome.storage.local.set({ apiKey: expApiKey.value.trim() })
+expApiKey.addEventListener('input', () => {
+  const val = expApiKey.value.trim()
+  chrome.storage.local.set({ apiKey: val })
+  clearTimeout(tokenValidateTimer)
+  if (!val) { setTokenStatus('empty'); return }
+  setTokenStatus('checking')
+  tokenValidateTimer = setTimeout(() => validateToken(val), 700)
 })
 
 expEyeBtn.addEventListener('click', () => {
   expApiKey.type = expApiKey.type === 'password' ? 'text' : 'password'
+})
+
+document.getElementById('getTokenBtn').addEventListener('click', () => {
+  chrome.tabs.create({ url: 'https://duocue-web.pages.dev' })
 })
 
 document.getElementById('openWebBtn').addEventListener('click', () => {
