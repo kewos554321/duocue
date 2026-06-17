@@ -755,6 +755,7 @@ function startPolling(platform) {
 
   _pollInterval = setInterval(async () => {
     syncOverlayParent()
+    platform.getTitle?.()
     const { enabled } = await chrome.storage.local.get('enabled')
     if (enabled === false) {
       updateOverlay(null, null)

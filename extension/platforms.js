@@ -18,7 +18,15 @@ const PLATFORMS = [
     textJoin: '\n',
     playerSelector: '.watch-video--player-view',
     hideNativeSelector: '.player-timedtext',
-    getTitle: () => document.title.replace(/\s*\|\s*Netflix$/i, '').trim(),
+    getTitle: (() => {
+      let cached = ''
+      return () => {
+        const live = document.querySelector('[data-uia="video-title"]')?.textContent.trim()
+          || document.title.replace(/\s*\|\s*Netflix$/i, '').trim()
+        if (live) cached = live
+        return cached
+      }
+    })(),
   },
   {
     id: 'youtube',
