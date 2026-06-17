@@ -75,6 +75,13 @@ app.get('/sentences', async (c) => {
   return c.json({ sentences: results })
 })
 
+app.get('/sentences/latest', async (c) => {
+  const row = await c.env.DB.prepare(
+    `SELECT id, created_at AS createdAt FROM sentences ORDER BY created_at DESC LIMIT 1`
+  ).first<{ id: number; createdAt: string }>()
+  return c.json({ latest: row ?? null })
+})
+
 app.delete('/sentences/:id', async (c) => {
   const id = parseInt(c.req.param('id'))
   if (isNaN(id)) return c.json({ error: 'Invalid id' }, 400)
