@@ -1,8 +1,8 @@
-import { useMemo } from 'react'
+import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
+import { RefreshCw } from 'lucide-react'
 import RecentSentencesTab from '../components/RecentSentencesTab'
 import AllSentencesTab from '../components/AllSentencesTab'
-import { useNewSentencePoll } from '../hooks/useNewSentencePoll'
 import type { ApiSentence, ApiVideo, WordStatus } from '../types'
 
 interface Props {
@@ -19,12 +19,17 @@ interface Props {
 
 export default function SentencesPage({ tab, sentences, videos, wordMap, onUpdateWordStatus, onRemoveWordStatus, onDeleteSentence, onOpenAI, onRefreshSentences }: Props) {
   const tabProps = { sentences, wordMap, onUpdateWordStatus, onRemoveWordStatus, onDeleteSentence, onOpenAI }
+  const [refreshing, setRefreshing] = useState(false)
 
-  const baselineId = useMemo(
-    () => sentences.reduce((max, s) => Math.max(max, s.id), 0),
-    [sentences]
-  )
-  const hasNewSentence = useNewSentencePoll(baselineId)
+  const handleRefresh = async () => {
+    if (refreshing) return
+    setRefreshing(true)
+    try {
+      await onRefreshSentences()
+    } finally {
+      setRefreshing(false)
+    }
+  }
 
   return (
     <div>
@@ -53,15 +58,15 @@ export default function SentencesPage({ tab, sentences, videos, wordMap, onUpdat
           ))}
         </div>
 
-        {hasNewSentence && (
-          <button
-            onClick={onRefreshSentences}
-            className="px-3 py-1.5 rounded-full text-[13px] font-medium transition-opacity hover:opacity-80"
-            style={{ background: 'var(--ios-blue)', color: 'white' }}
-          >
-            有新句子，點擊查看
-          </button>
-        )}
+        <button
+          onClick={handleRefresh}
+          disabled={refreshing}
+          title="重新整理句子列表"
+          className="w-8 h-8 flex items-center justify-center rounded-full transition-colors hover:bg-black/5 dark:hover:bg-white/10 disabled:opacity-40"
+          style={{ color: 'var(--text-secondary)' }}
+        >
+          <RefreshCw size={15} className={refreshing ? 'animate-spin' : ''} />
+        </button>
       </div>
 
       {tab === 'recent'
