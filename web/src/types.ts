@@ -47,6 +47,8 @@ export interface PracticeWord {
   word: string
   intervalDays: number
   nextReviewAt: number | null
+  repetitions: number
+  easeFactor: number
   sentence: PracticeSentence | null
 }
 

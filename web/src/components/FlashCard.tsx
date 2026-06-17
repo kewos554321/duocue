@@ -1,5 +1,6 @@
 import { useDefinition } from '../hooks/useDefinition'
 import type { PracticeRating, PracticeWord } from '../types'
+import { calcNextInterval } from '../utils/sm2'
 
 interface Props {
   item: PracticeWord
@@ -24,14 +25,6 @@ function speak(word: string) {
   window.speechSynthesis.speak(u)
 }
 
-function calcNextInterval(item: PracticeWord, rating: PracticeRating): number {
-  const ef = 2.5
-  const prev = item.intervalDays
-  if (rating === 1) return 1
-  if (rating === 2) return Math.max(1, Math.round(prev * 1.2))
-  const base = prev < 2 ? 1 : prev < 7 ? 6 : Math.round(prev * ef)
-  return rating === 4 ? Math.round(base * 1.3) : base
-}
 
 function metaText(item: PracticeWord): string {
   if (item.nextReviewAt === null) return '新單字 · 首次複習'
@@ -185,7 +178,7 @@ export default function FlashCard({ item, flipped, onFlip, onAnswer }: Props) {
               onMouseLeave={e => (e.currentTarget.style.background = style.background as string)}
             >
               {icon} {label}
-              <span style={{ fontSize: '10px', fontWeight: 400, opacity: 0.65 }}>{calcNextInterval(item, rating)} 天後</span>
+              <span style={{ fontSize: '10px', fontWeight: 400, opacity: 0.65 }}>{calcNextInterval(rating, item.intervalDays, item.repetitions, item.easeFactor)} 天後</span>
             </button>
           ))}
         </div>

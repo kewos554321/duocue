@@ -3,6 +3,7 @@ import { cors } from 'hono/cors'
 import { registerNoteRoutes } from './notes'
 import { registerSettingsRoutes } from './settings'
 import { hashPassword, verifyPassword, generateToken } from './auth'
+import { calcSM2 } from './sm2'
 
 export type Bindings = {
   DB: D1Database
@@ -260,12 +261,13 @@ app.patch('/videos', async (c) => {
 app.get('/practice/queue', async (c) => {
   const userId = c.get('userId')
   const { results: words } = await c.env.DB.prepare(`
-    SELECT word, interval_days AS intervalDays, next_review_at AS nextReviewAt
+    SELECT word, interval_days AS intervalDays, next_review_at AS nextReviewAt,
+           repetitions, ease_factor AS easeFactor
     FROM words
     WHERE user_id = ? AND status = 'learning'
       AND (next_review_at IS NULL OR next_review_at <= unixepoch())
     ORDER BY COALESCE(next_review_at, 0) ASC, word ASC
-  `).bind(userId).all<{ word: string; intervalDays: number; nextReviewAt: number | null }>()
+  `).bind(userId).all<{ word: string; intervalDays: number; nextReviewAt: number | null; repetitions: number; easeFactor: number }>()
 
   if (words.length === 0) return c.json({ queue: [] })
 
@@ -288,6 +290,8 @@ app.get('/practice/queue', async (c) => {
     word: w.word,
     intervalDays: w.intervalDays,
     nextReviewAt: w.nextReviewAt,
+    repetitions: w.repetitions,
+    easeFactor: w.easeFactor,
     sentence: (sentenceResults[i].results[0] as {
       text: string; translation: string | null; videoUrl: string; timestampS: number
     } | undefined) ?? null,
@@ -295,39 +299,6 @@ app.get('/practice/queue', async (c) => {
 
   return c.json({ queue })
 })
-
-function calcSM2(
-  rating: 1 | 2 | 3 | 4,
-  intervalDays: number,
-  repetitions: number,
-  easeFactor: number,
-): { newInterval: number; newRepetitions: number; newEaseFactor: number } {
-  let newInterval: number
-  let newRepetitions: number
-  let newEaseFactor = easeFactor
-
-  if (rating === 1) {
-    newInterval = 1
-    newRepetitions = 0
-    newEaseFactor = Math.max(1.3, easeFactor - 0.2)
-  } else if (rating === 2) {
-    newInterval = Math.max(1, Math.round(intervalDays * 1.2))
-    newRepetitions = repetitions
-    newEaseFactor = Math.max(1.3, easeFactor - 0.15)
-  } else {
-    if (repetitions === 0) newInterval = 1
-    else if (repetitions === 1) newInterval = 6
-    else newInterval = Math.round(intervalDays * easeFactor)
-    if (rating === 4) {
-      newInterval = Math.round(newInterval * 1.3)
-      newEaseFactor = Math.min(3.0, easeFactor + 0.1)
-    }
-    newRepetitions = repetitions + 1
-    newEaseFactor = Math.max(1.3, newEaseFactor)
-  }
-
-  return { newInterval, newRepetitions, newEaseFactor }
-}
 
 app.post('/practice/review', async (c) => {
   let body: { word?: string; rating?: number }
