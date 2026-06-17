@@ -86,6 +86,7 @@ chrome.storage.local.get(['experimentalMode', 'apiEndpoint', 'apiKey'], ({ exper
   _expApiKey = apiKey || ''
   if (experimentalEnabled && _expApiEndpoint && _expApiKey) {
     fetchWordCache()
+    setInterval(fetchWordCache, 60000)
   }
 })
 
@@ -96,7 +97,9 @@ async function fetchWordCache() {
     })
     if (!res.ok) return
     const { words } = await res.json()
+    _wordStatus = {}
     words.forEach(({ word, status }) => { _wordStatus[word] = status })
+    chrome.storage.local.set({ wordStatus: _wordStatus })
     console.log('[DuoCue] word cache loaded:', words.length, 'words')
   } catch (e) {
     console.warn('[DuoCue] failed to fetch word cache', e)
