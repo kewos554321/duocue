@@ -233,19 +233,21 @@ app.patch('/videos', async (c) => {
   }
 
   const { url, title } = body
-  if (!url || !title?.trim()) {
-    return c.json({ error: 'url and title are required' }, 400)
+  if (!url) {
+    return c.json({ error: 'url is required' }, 400)
   }
+
+  const newTitle = title !== undefined ? (title.trim() || null) : null
 
   const result = await c.env.DB.prepare(
     `UPDATE videos SET title = ? WHERE url = ? AND user_id = ?`
-  ).bind(title.trim(), url, c.get('userId')).run()
+  ).bind(newTitle, url, c.get('userId')).run()
 
   if (result.meta.changes === 0) {
     return c.json({ error: 'Video not found' }, 404)
   }
 
-  return c.json({ url, title: title.trim() })
+  return c.json({ url, title: newTitle })
 })
 
 app.get('/practice/queue', async (c) => {

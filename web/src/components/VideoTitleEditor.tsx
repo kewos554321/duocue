@@ -33,7 +33,6 @@ export default function VideoTitleEditor({ title, onRename }: Props) {
 
   const save = async () => {
     const trimmed = draft.trim()
-    if (!trimmed) return
     try {
       await onRename(trimmed)
       setEditing(false)
@@ -80,14 +79,12 @@ export default function VideoTitleEditor({ title, onRename }: Props) {
         />
         <button
           onClick={save}
-          disabled={!draft.trim()}
           className="px-2 py-0.5 rounded-md text-[12px] font-medium"
           style={{
             background: 'rgba(0,122,255,0.15)',
             color: 'var(--ios-blue)',
             border: '1px solid rgba(0,122,255,0.3)',
-            opacity: draft.trim() ? 1 : 0.4,
-            cursor: draft.trim() ? 'pointer' : 'default',
+            cursor: 'pointer',
           }}
         >
           儲存

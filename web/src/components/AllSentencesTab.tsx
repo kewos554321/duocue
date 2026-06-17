@@ -62,8 +62,9 @@ export default function AllSentencesTab({ sentences, videos, wordMap, onUpdateWo
   const search = searchParams.get('q') ?? ''
 
   const handleRename = async (videoUrl: string, newTitle: string) => {
+    const resolved = newTitle.trim() || null
     setLocalVideos(prev =>
-      prev.map(v => v.url === videoUrl ? { ...v, title: newTitle } : v)
+      prev.map(v => v.url === videoUrl ? { ...v, title: resolved } : v)
     )
     try {
       await patchVideoTitle(videoUrl, newTitle)
@@ -74,15 +75,32 @@ export default function AllSentencesTab({ sentences, videos, wordMap, onUpdateWo
     }
   }
 
-  const platformGroups = useMemo(
-    () => localVideos.reduce<Record<string, ApiVideo[]>>((acc, v) => {
-      if (!acc[v.platform]) acc[v.platform] = []
-      if (!acc[v.platform].some(x => x.url === v.url))
-        acc[v.platform].push(v)
-      return acc
-    }, {}),
-    [localVideos]
+  const videosWithSentences = useMemo(
+    () => new Set(sentences.map(s => s.videoUrl)),
+    [sentences]
   )
+
+  const platformGroups = useMemo(
+    () => localVideos
+      .filter(v => videosWithSentences.has(v.url))
+      .reduce<Record<string, ApiVideo[]>>((acc, v) => {
+        if (!acc[v.platform]) acc[v.platform] = []
+        if (!acc[v.platform].some(x => x.url === v.url))
+          acc[v.platform].push(v)
+        return acc
+      }, {}),
+    [localVideos, videosWithSentences]
+  )
+
+  useEffect(() => {
+    const platform = searchParams.get('platform')
+    const videoUrl = searchParams.get('video')
+    if (platform && !platformGroups[platform]) {
+      selectPlatform(null)
+    } else if (videoUrl && !videosWithSentences.has(videoUrl)) {
+      selectVideo(null)
+    }
+  }, [platformGroups, videosWithSentences])
 
   const filtered = useMemo(() => {
     let result = selectedVideoUrl !== null
