@@ -102,3 +102,7 @@ UPDATE sentences SET user_id = 1;
 
 ALTER TABLE reviews ADD COLUMN user_id INTEGER REFERENCES users(id);
 UPDATE reviews SET user_id = 1;
+
+-- Migration: AI sentence notes
+ALTER TABLE sentences ADD COLUMN ai_note TEXT;
+ALTER TABLE sentences ADD COLUMN ai_note_updated_at INTEGER;
