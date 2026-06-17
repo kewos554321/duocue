@@ -190,7 +190,13 @@ export default function SentenceAISheet({ sentence, isOpen, onClose, onNoteSaved
                       color: m.role === 'user' ? '#fff' : 'var(--text-primary)',
                     }}
                   >
-                    {m.content || (streaming && i === messages.length - 1 ? '…' : '')}
+                    {m.content || (streaming && i === messages.length - 1 ? (
+                      <span className="flex items-center gap-1 py-0.5">
+                        <span className="typing-dot" />
+                        <span className="typing-dot" style={{ animationDelay: '0.15s' }} />
+                        <span className="typing-dot" style={{ animationDelay: '0.3s' }} />
+                      </span>
+                    ) : '')}
                   </div>
                 </div>
               ))}
