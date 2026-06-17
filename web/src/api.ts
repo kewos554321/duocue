@@ -13,6 +13,13 @@ export async function fetchSentences(): Promise<ApiSentence[]> {
   return sentences as ApiSentence[]
 }
 
+export async function fetchLatestSentenceId(): Promise<number | null> {
+  const res = await fetch(`${API_ENDPOINT}/sentences/latest`, { headers: authHeaders })
+  if (!res.ok) throw new Error(`GET /sentences/latest failed: ${res.status}`)
+  const { latest } = await res.json()
+  return latest ? (latest.id as number) : null
+}
+
 export async function fetchVideos(): Promise<ApiVideo[]> {
   const res = await fetch(`${API_ENDPOINT}/videos`, { headers: authHeaders })
   if (!res.ok) throw new Error(`GET /videos failed: ${res.status}`)
