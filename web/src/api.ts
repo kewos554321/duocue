@@ -1,6 +1,6 @@
 import { API_ENDPOINT } from './config'
 import { getToken, clearToken } from './auth'
-import type { ApiSentence, ApiVideo, ApiWord, WordStatus, PracticeWord, PracticeStats } from './types'
+import type { ApiSentence, ApiVideo, ApiWord, WordStatus, PracticeWord, PracticeStats, ChatMessage } from './types'
 
 async function request(path: string, init: RequestInit = {}): Promise<Response> {
   const res = await fetch(`${API_ENDPOINT}${path}`, {
@@ -111,4 +111,61 @@ export async function fetchPracticeStats(): Promise<PracticeStats> {
   const res = await request('/practice/stats')
   if (!res.ok) throw new Error(`GET /practice/stats failed: ${res.status}`)
   return res.json()
+}
+
+export async function streamAiChat(
+  sentenceId: number,
+  messages: ChatMessage[],
+  onDelta: (text: string) => void,
+): Promise<void> {
+  const res = await request(`/sentences/${sentenceId}/ai-chat`, {
+    method: 'POST',
+    body: JSON.stringify({ messages }),
+  })
+  if (!res.ok || !res.body) throw new Error(`POST /sentences/${sentenceId}/ai-chat failed: ${res.status}`)
+
+  const reader = res.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+    const chunks = buffer.split('\n\n')
+    buffer = chunks.pop() ?? ''
+    for (const chunk of chunks) {
+      if (!chunk.startsWith('data: ')) continue
+      const payload = JSON.parse(chunk.slice(6)) as { delta?: string; done?: boolean; error?: string }
+      if (payload.error) throw new Error(payload.error)
+      if (payload.delta) onDelta(payload.delta)
+    }
+  }
+}
+
+export async function postNoteSummarize(sentenceId: number, messages: ChatMessage[]): Promise<string> {
+  const res = await request(`/sentences/${sentenceId}/note/summarize`, {
+    method: 'POST',
+    body: JSON.stringify({ messages }),
+  })
+  if (!res.ok) throw new Error(`POST /sentences/${sentenceId}/note/summarize failed: ${res.status}`)
+  const { draft } = await res.json()
+  return draft as string
+}
+
+export async function saveNote(sentenceId: number, note: string): Promise<number> {
+  const res = await request(`/sentences/${sentenceId}/note`, {
+    method: 'POST',
+    body: JSON.stringify({ note }),
+  })
+  if (!res.ok) throw new Error(`POST /sentences/${sentenceId}/note failed: ${res.status}`)
+  const { aiNoteUpdatedAt } = await res.json()
+  return aiNoteUpdatedAt as number
+}
+
+export async function deleteNote(sentenceId: number): Promise<void> {
+  const res = await request(`/sentences/${sentenceId}/note`, {
+    method: 'DELETE',
+  })
+  if (!res.ok) throw new Error(`DELETE /sentences/${sentenceId}/note failed: ${res.status}`)
 }
