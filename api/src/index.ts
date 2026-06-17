@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { hashPassword, verifyPassword, generateToken } from './auth'
+import { registerNoteRoutes } from './notes'
 
 export type Bindings = {
   DB: D1Database
@@ -424,5 +425,7 @@ app.get('/practice/stats', async (c) => {
     last30Days: last30.results as { date: string; count: number }[],
   })
 })
+
+registerNoteRoutes(app)
 
 export default app
