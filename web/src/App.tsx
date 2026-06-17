@@ -34,6 +34,11 @@ export default function App() {
       .finally(() => setLoading(false))
   }, [])
 
+  const refreshSentences = async () => {
+    const s = await fetchSentences()
+    setSentences(s)
+  }
+
   const handleDeleteSentence = async (id: number) => {
     await deleteSentence(id)
     setSentences(prev => prev.filter(s => s.id !== id))
@@ -84,6 +89,7 @@ export default function App() {
     onUpdateWordStatus: updateWordStatus,
     onRemoveWordStatus: handleRemoveWord,
     onDeleteSentence: handleDeleteSentence,
+    onRefreshSentences: refreshSentences,
   }
 
   return (
