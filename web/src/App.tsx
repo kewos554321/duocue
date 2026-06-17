@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/Layout'
+import SentenceAISheet from './components/SentenceAISheet'
 import SentencesPage from './pages/SentencesPage'
+import NotesPage from './pages/NotesPage'
 import WordBookPage from './pages/WordBookPage'
 import PracticePage from './pages/PracticePage'
 import StatsPage from './pages/StatsPage'
@@ -10,7 +12,7 @@ import RegisterPage from './pages/RegisterPage'
 import {
   fetchSentences, fetchVideos, fetchWords,
   fetchPracticeQueue, fetchPracticeStats,
-  patchWordStatus, deleteSentence, removeWord, postPracticeReview,
+  patchWordStatus, deleteSentence, removeWord, postPracticeReview, deleteNote,
 } from './api'
 import { getToken } from './auth'
 import type { ApiSentence, ApiVideo, ApiWord, WordStatus, PracticeWord, PracticeStats } from './types'
@@ -66,6 +68,26 @@ export default function App() {
     fetchPracticeStats().then(setStats).catch(() => {})
   }
 
+  const [aiSheetSentence, setAiSheetSentence] = useState<ApiSentence | null>(null)
+  const [aiSheetOpen, setAiSheetOpen] = useState(false)
+
+  const openAiSheet = (sentence: ApiSentence) => {
+    setAiSheetSentence(sentence)
+    setAiSheetOpen(true)
+  }
+  const closeAiSheet = () => setAiSheetOpen(false)
+
+  const handleNoteSaved = (id: number, note: string, updatedAt: number) => {
+    setSentences(prev => prev.map(s => (s.id === id ? { ...s, aiNote: note, aiNoteUpdatedAt: updatedAt } : s)))
+  }
+  const handleNoteDeleted = (id: number) => {
+    setSentences(prev => prev.map(s => (s.id === id ? { ...s, aiNote: null, aiNoteUpdatedAt: null } : s)))
+  }
+  const handleDeleteNoteDirect = async (id: number) => {
+    await deleteNote(id)
+    handleNoteDeleted(id)
+  }
+
   const wordMap = new Map(words.map(w => [w.word, w.status]))
 
   if (!getToken()) {
@@ -101,20 +123,29 @@ export default function App() {
     onUpdateWordStatus: updateWordStatus,
     onRemoveWordStatus: handleRemoveWord,
     onDeleteSentence: handleDeleteSentence,
+    onOpenAI: openAiSheet,
   }
 
   return (
-    <Layout sentences={sentences} words={words} practiceQueueCount={practiceQueue.length}>
-      <Routes>
-        <Route path="/login" element={<Navigate to="/" replace />} />
-        <Route path="/register" element={<Navigate to="/" replace />} />
-        <Route path="/" element={<Navigate to="/sentences/recent" replace />} />
-        <Route path="/sentences/recent" element={<SentencesPage tab="recent" {...sentenceProps} />} />
-        <Route path="/sentences/all" element={<SentencesPage tab="all" {...sentenceProps} />} />
-        <Route path="/words" element={<WordBookPage words={words} sentences={sentences} onUpdateWordStatus={updateWordStatus} onRemoveWord={handleRemoveWord} />} />
-        <Route path="/practice" element={<PracticePage queue={practiceQueue} onReview={handleReview} />} />
-        <Route path="/stats" element={<StatsPage stats={stats} loading={false} />} />
-      </Routes>
-    </Layout>
+    <>
+      <Layout sentences={sentences} words={words} practiceQueueCount={practiceQueue.length} dimmed={aiSheetOpen}>
+        <Routes>
+          <Route path="/" element={<Navigate to="/sentences/recent" replace />} />
+          <Route path="/sentences/recent" element={<SentencesPage tab="recent" {...sentenceProps} />} />
+          <Route path="/sentences/all" element={<SentencesPage tab="all" {...sentenceProps} />} />
+          <Route path="/words" element={<WordBookPage words={words} sentences={sentences} onUpdateWordStatus={updateWordStatus} onRemoveWord={handleRemoveWord} />} />
+          <Route path="/practice" element={<PracticePage queue={practiceQueue} onReview={handleReview} />} />
+          <Route path="/stats" element={<StatsPage stats={stats} loading={false} />} />
+          <Route path="/notes" element={<NotesPage sentences={sentences} onOpenAI={openAiSheet} onDeleteNote={handleDeleteNoteDirect} />} />
+        </Routes>
+      </Layout>
+      <SentenceAISheet
+        sentence={aiSheetSentence}
+        isOpen={aiSheetOpen}
+        onClose={closeAiSheet}
+        onNoteSaved={handleNoteSaved}
+        onNoteDeleted={handleNoteDeleted}
+      />
+    </>
   )
 }

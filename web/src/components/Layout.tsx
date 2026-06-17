@@ -11,10 +11,11 @@ interface Props {
   sentences: ApiSentence[]
   words: ApiWord[]
   practiceQueueCount: number
+  dimmed?: boolean
   children: ReactNode
 }
 
-export default function Layout({ sentences, words, practiceQueueCount, children }: Props) {
+export default function Layout({ sentences, words, practiceQueueCount, dimmed, children }: Props) {
   const { theme, toggleTheme } = useTheme()
   const [copied, setCopied] = useState(false)
 
@@ -85,7 +86,14 @@ export default function Layout({ sentences, words, practiceQueueCount, children 
           practiceQueueCount={practiceQueueCount}
         />
         <main className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-2xl mx-auto">
+          <div
+            className="max-w-2xl mx-auto"
+            style={{
+              transform: dimmed ? 'scale(0.94) translateY(-12px)' : 'none',
+              opacity: dimmed ? 0.6 : 1,
+              transition: 'transform 320ms cubic-bezier(0.32, 0.72, 0, 1), opacity 320ms cubic-bezier(0.32, 0.72, 0, 1)',
+            }}
+          >
             {children}
           </div>
         </main>
