@@ -2,8 +2,9 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { hashPassword, verifyPassword, generateToken } from './auth'
 
-type Bindings = {
+export type Bindings = {
   DB: D1Database
+  GEMINI_API_KEY: string
 }
 
 type Variables = {
@@ -155,7 +156,9 @@ app.get('/sentences', async (c) => {
            s.timestamp_s  AS timestampS,
            v.platform,    v.url   AS videoUrl,
            v.title        AS videoTitle,
-           s.created_at   AS createdAt
+           s.created_at   AS createdAt,
+           s.ai_note      AS aiNote,
+           s.ai_note_updated_at AS aiNoteUpdatedAt
     FROM sentences s
     JOIN videos v ON v.id = s.video_id
     ${where}
