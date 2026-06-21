@@ -169,7 +169,7 @@ app.get('/sentences', async (c) => {
            s.timestamp_s  AS timestampS,
            v.platform,    v.url   AS videoUrl,
            v.title        AS videoTitle,
-           s.created_at   AS createdAt,
+           s.created_at || 'Z' AS createdAt,
            s.ai_note      AS aiNote,
            s.ai_note_updated_at AS aiNoteUpdatedAt
     FROM sentences s
@@ -183,7 +183,7 @@ app.get('/sentences', async (c) => {
 
 app.get('/sentences/latest', async (c) => {
   const row = await c.env.DB.prepare(
-    `SELECT id, created_at AS createdAt FROM sentences ORDER BY created_at DESC LIMIT 1`
+    `SELECT id, created_at || 'Z' AS createdAt FROM sentences ORDER BY created_at DESC LIMIT 1`
   ).first<{ id: number; createdAt: string }>()
   return c.json({ latest: row ?? null })
 })
