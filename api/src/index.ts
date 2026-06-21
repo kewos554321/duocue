@@ -39,10 +39,21 @@ app.use('*', async (c, next) => {
   c.set('token', token)
   c.set('userId', session.user_id)
   await next()
+
+  if (needsRefresh(session.expires_at)) {
+    await c.env.DB.prepare(
+      `UPDATE sessions SET expires_at = ? WHERE token = ?`
+    ).bind(newExpiry(), token).run()
+  }
 })
 
 function newExpiry(): string {
   return new Date(Date.now() + 30 * 86400 * 1000).toISOString()
+}
+
+export function needsRefresh(expiresAt: string, now: Date = new Date()): boolean {
+  const fifteenDaysFromNow = new Date(now.getTime() + 15 * 86400 * 1000)
+  return new Date(expiresAt) < fifteenDaysFromNow
 }
 
 app.post('/auth/register', async (c) => {
