@@ -168,6 +168,10 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
   if (changes.experimentalMode) {
     experimentalEnabled = !!changes.experimentalMode.newValue
   }
+  if (changes.apiKey) {
+    _expApiKey = changes.apiKey.newValue || ''
+    if (experimentalEnabled && _expApiEndpoint && _expApiKey) fetchWordCache()
+  }
 })
 
 // ── HTML escaping ─────────────────────────────────────────────────────────
