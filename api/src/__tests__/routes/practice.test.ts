@@ -189,4 +189,33 @@ describe('GET /practice/stats', () => {
     const body = await res.json() as any
     expect(body.wordCounts).toEqual({ learning: 0, learned: 0 })
   })
+
+  test('breaks streak at the first gap in review dates', async () => {
+    const today = new Date()
+    const d = (offset: number) => new Date(today.getTime() - offset * 86400000).toISOString().slice(0, 10)
+    // today and 2-days-ago with no review yesterday → gap → streak = 1
+    const res = await app.request('/practice/stats', get(), env([
+      SESSION_ENTRY,
+      { all: [] },
+      { all: [{ date: d(0) }, { date: d(2) }, { date: d(3) }] },
+      { all: [{ learning: 0, learned: 0 }] },
+      { all: [{ count: 0 }] },
+    ]))
+    expect(res.status).toBe(200)
+    expect((await res.json() as any).streak).toBe(1)
+  })
+
+  test('counts streak starting from yesterday', async () => {
+    const today = new Date()
+    const d = (offset: number) => new Date(today.getTime() - offset * 86400000).toISOString().slice(0, 10)
+    const res = await app.request('/practice/stats', get(), env([
+      SESSION_ENTRY,
+      { all: [] },
+      { all: [{ date: d(1) }, { date: d(2) }, { date: d(3) }] },
+      { all: [{ learning: 0, learned: 0 }] },
+      { all: [{ count: 0 }] },
+    ]))
+    expect(res.status).toBe(200)
+    expect((await res.json() as any).streak).toBe(3)
+  })
 })

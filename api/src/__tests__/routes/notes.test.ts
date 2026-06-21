@@ -1,17 +1,30 @@
-import { describe, test, expect, vi } from 'vitest'
+import { describe, test, expect, vi, beforeEach } from 'vitest'
 import app from '../../index'
 import { makeMockDB, SESSION_ENTRY, AUTH_HEADERS, get, post, del } from '../helpers/mock-db'
+
+const mocks = vi.hoisted(() => ({
+  generateContentStream: vi.fn().mockImplementation(
+    async () => (async function* () { yield { text: 'mocked chunk' } })()
+  ),
+  generateContent: vi.fn().mockResolvedValue({ text: 'mocked summary note' }),
+}))
 
 vi.mock('@google/genai', () => ({
   GoogleGenAI: class {
     models = {
-      generateContentStream: () =>
-        Promise.resolve((async function* () { yield { text: 'mocked chunk' } })()),
-      generateContent: () =>
-        Promise.resolve({ text: 'mocked summary note' }),
+      generateContentStream: mocks.generateContentStream,
+      generateContent: mocks.generateContent,
     }
   },
 }))
+
+beforeEach(() => {
+  vi.clearAllMocks()
+  mocks.generateContentStream.mockImplementation(
+    async () => (async function* () { yield { text: 'mocked chunk' } })()
+  )
+  mocks.generateContent.mockResolvedValue({ text: 'mocked summary note' })
+})
 
 const env = (entries: Parameters<typeof makeMockDB>[0]) => ({ DB: makeMockDB(entries) })
 const MESSAGES = [{ role: 'user', content: 'What does this mean?' }]
@@ -47,7 +60,7 @@ describe('POST /sentences/:id/ai-chat', () => {
   test('returns 404 when sentence not found', async () => {
     const res = await app.request('/sentences/1/ai-chat', post({ messages: MESSAGES }), env([
       SESSION_ENTRY,
-      { first: null },  // loadSentence
+      { first: null },
     ]))
     expect(res.status).toBe(404)
     expect((await res.json() as any).error).toBe('Sentence not found')
@@ -56,14 +69,14 @@ describe('POST /sentences/:id/ai-chat', () => {
   test('returns 400 GEMINI_KEY_MISSING when no api key configured', async () => {
     const res = await app.request('/sentences/1/ai-chat', post({ messages: MESSAGES }), env([
       SESSION_ENTRY,
-      { first: { text: 'Hello', translation: null } },  // loadSentence
-      { first: null },                                    // loadGeminiKey
+      { first: { text: 'Hello', translation: null } },
+      { first: null },
     ]))
     expect(res.status).toBe(400)
     expect((await res.json() as any).error).toBe('GEMINI_KEY_MISSING')
   })
 
-  test('streams SSE response when gemini key is configured', async () => {
+  test('streams SSE delta events when gemini key is configured', async () => {
     const res = await app.request('/sentences/1/ai-chat', post({ messages: MESSAGES }), env([
       SESSION_ENTRY,
       { first: { text: 'Hello world', translation: '你好世界' } },
@@ -73,6 +86,23 @@ describe('POST /sentences/:id/ai-chat', () => {
     expect(res.headers.get('content-type')).toContain('text/event-stream')
     const text = await res.text()
     expect(text).toContain('mocked chunk')
+    expect(text).toContain('"done":true')
+  })
+
+  test('sends SSE error event when Gemini stream throws', async () => {
+    mocks.generateContentStream.mockImplementationOnce(() => {
+      throw new Error('Gemini API error')
+    })
+    const res = await app.request('/sentences/1/ai-chat', post({ messages: MESSAGES }), env([
+      SESSION_ENTRY,
+      { first: { text: 'Hello', translation: null } },
+      { first: { value: 'fake-gemini-key' } },
+    ]))
+    expect(res.status).toBe(200)
+    expect(res.headers.get('content-type')).toContain('text/event-stream')
+    const text = await res.text()
+    expect(text).toContain('"error"')
+    expect(text).toContain('Gemini API error')
   })
 })
 
@@ -81,6 +111,16 @@ describe('POST /sentences/:id/note/summarize', () => {
     const res = await app.request('/sentences/abc/note/summarize', post({ messages: MESSAGES }), env([SESSION_ENTRY]))
     expect(res.status).toBe(400)
     expect((await res.json() as any).error).toBe('Invalid id')
+  })
+
+  test('returns 400 for invalid JSON', async () => {
+    const res = await app.request('/sentences/1/note/summarize', {
+      method: 'POST',
+      headers: AUTH_HEADERS,
+      body: 'not-json',
+    }, env([SESSION_ENTRY]))
+    expect(res.status).toBe(400)
+    expect((await res.json() as any).error).toBe('Invalid JSON body')
   })
 
   test('returns 400 when messages is missing', async () => {
@@ -106,7 +146,7 @@ describe('POST /sentences/:id/note/summarize', () => {
     expect((await res.json() as any).error).toBe('GEMINI_KEY_MISSING')
   })
 
-  test('returns draft when gemini key is configured', async () => {
+  test('returns draft and covers assistant role mapping', async () => {
     const messages = [
       { role: 'user', content: 'What does this mean?' },
       { role: 'assistant', content: 'It means hello.' },
@@ -144,7 +184,7 @@ describe('POST /sentences/:id/note', () => {
     expect((await res.json() as any).error).toBe('note is required')
   })
 
-  test('returns 400 when note is blank', async () => {
+  test('returns 400 when note is blank whitespace', async () => {
     const res = await app.request('/sentences/1/note', post({ note: '   ' }), env([SESSION_ENTRY]))
     expect(res.status).toBe(400)
   })

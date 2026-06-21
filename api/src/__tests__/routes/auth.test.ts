@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeAll } from 'vitest'
 import app from '../../index'
-import { hashPassword } from '../../auth'
+import { hashPassword, verifyPassword } from '../../auth'
 import { makeMockDB, SESSION_ENTRY, VALID_TOKEN, FAR_EXPIRY } from '../helpers/mock-db'
 
 let validHash: string
@@ -196,5 +196,19 @@ describe('POST /auth/logout', () => {
       headers: { Authorization: `Bearer ${VALID_TOKEN}` },
     }, env([SESSION_ENTRY, {}]))
     expect(res.status).toBe(204)
+  })
+})
+
+// ── verifyPassword edge cases (auth.ts branch coverage) ───────────────────
+
+describe('verifyPassword', () => {
+  test('returns false when stored value has no colon separator', async () => {
+    expect(await verifyPassword('any-password', 'nocolonhere')).toBe(false)
+  })
+
+  test('returns false when hashHex is shorter than derived hash (length mismatch)', async () => {
+    // saltHex = 32 hex chars (16 bytes), hashHex = "short" (5 chars vs expected 64)
+    const saltHex = 'a'.repeat(32)
+    expect(await verifyPassword('any-password', `${saltHex}:short`)).toBe(false)
   })
 })
