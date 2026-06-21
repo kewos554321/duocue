@@ -816,21 +816,40 @@ window.addEventListener('popstate', tryInit)
 tryInit()
 
 // ── Experimental: toast notification ──────────────────────────────────────
-function showToast(message) {
+function showToast(message, action) {
   let toast = document.getElementById('duocue-toast')
   if (!toast) {
     toast = document.createElement('div')
     toast.id = 'duocue-toast'
     document.body.appendChild(toast)
   }
-  toast.textContent = message
+
+  toast.innerHTML = ''
+  const span = document.createElement('span')
+  span.textContent = message
+  toast.appendChild(span)
+
+  if (action) {
+    const btn = document.createElement('button')
+    btn.textContent = action.label
+    btn.style.cssText = 'margin-left:10px;background:none;border:none;color:inherit;font:inherit;font-weight:600;cursor:pointer;text-decoration:underline;padding:0;'
+    btn.addEventListener('click', () => {
+      action.onClick()
+      clearTimeout(toast._timer)
+      toast.classList.remove('duocue-toast-show')
+      toast.classList.add('duocue-toast-hide')
+    })
+    toast.appendChild(btn)
+  }
+
+  toast.style.pointerEvents = action ? 'auto' : 'none'
   toast.classList.remove('duocue-toast-hide')
   toast.classList.add('duocue-toast-show')
   clearTimeout(toast._timer)
   toast._timer = setTimeout(() => {
     toast.classList.remove('duocue-toast-show')
     toast.classList.add('duocue-toast-hide')
-  }, 1500)
+  }, action ? 6000 : 1500)
 }
 
 // ── Experimental: S key — save current subtitle sentence ──────────────────
@@ -866,7 +885,14 @@ document.addEventListener('keydown', async (e) => {
         timestampS
       })
     })
-    if (!res.ok) showToast('× 儲存失敗')
+    if (res.status === 401) {
+      showToast('× Token 已過期', {
+        label: '重新登入 →',
+        onClick: () => window.open('https://duocue-web.pages.dev', '_blank'),
+      })
+    } else if (!res.ok) {
+      showToast('× 儲存失敗')
+    }
   } catch {
     showToast('× 儲存失敗')
   }
