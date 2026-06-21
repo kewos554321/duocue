@@ -20,6 +20,15 @@ app.use('*', cors())
 
 const PUBLIC_PATHS = new Set(['/auth/register', '/auth/login'])
 
+function newExpiry(): string {
+  return new Date(Date.now() + 30 * 86400 * 1000).toISOString()
+}
+
+export function needsRefresh(expiresAt: string, now: Date = new Date()): boolean {
+  const fifteenDaysFromNow = new Date(now.getTime() + 15 * 86400 * 1000)
+  return new Date(expiresAt) < fifteenDaysFromNow
+}
+
 app.use('*', async (c, next) => {
   if (c.req.method === 'OPTIONS') return next()
   if (PUBLIC_PATHS.has(c.req.path)) return next()
@@ -46,15 +55,6 @@ app.use('*', async (c, next) => {
     ).bind(newExpiry(), token).run()
   }
 })
-
-function newExpiry(): string {
-  return new Date(Date.now() + 30 * 86400 * 1000).toISOString()
-}
-
-export function needsRefresh(expiresAt: string, now: Date = new Date()): boolean {
-  const fifteenDaysFromNow = new Date(now.getTime() + 15 * 86400 * 1000)
-  return new Date(expiresAt) < fifteenDaysFromNow
-}
 
 app.post('/auth/register', async (c) => {
   let body: { email?: string; password?: string }
