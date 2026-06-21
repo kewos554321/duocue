@@ -8,9 +8,10 @@ vi.mock('../config', () => ({ API_ENDPOINT: 'https://api.test' }))
 
 import { clearToken } from '../auth'
 import {
-  register, login,
-  fetchSentences, fetchWords, fetchVideos, fetchPracticeQueue,
-  patchWordStatus, postPracticeReview,
+  register, login, logout,
+  fetchSentences, fetchWords, fetchVideos, fetchPracticeQueue, fetchPracticeStats,
+  patchWordStatus, patchVideoTitle, postPracticeReview,
+  deleteSentence, removeWord,
   streamAiChat, postNoteSummarize, saveNote, deleteNote,
   getSettings, saveGeminiKey,
 } from '../api'
@@ -208,5 +209,154 @@ describe('saveGeminiKey', () => {
   test('throws on non-ok response', async () => {
     vi.stubGlobal('fetch', mockFetch({ error: 'geminiApiKey is required' }, 400))
     await expect(saveGeminiKey('')).rejects.toThrow('POST /settings failed: 400')
+  })
+})
+
+// ── logout ─────────────────────────────────────────────────────────────────
+
+describe('logout', () => {
+  test('calls POST /auth/logout', async () => {
+    const stub = mockFetch({})
+    vi.stubGlobal('fetch', stub)
+    await logout()
+    expect(stub).toHaveBeenCalledOnce()
+    expect((stub.mock.calls[0][0] as string)).toContain('/auth/logout')
+  })
+})
+
+// ── fetchVideos ────────────────────────────────────────────────────────────
+
+describe('fetchVideos', () => {
+  test('returns videos array on success', async () => {
+    const videos = [{ platform: 'youtube', url: 'https://yt.com', title: 'Lesson 1', sentenceCount: 3 }]
+    vi.stubGlobal('fetch', mockFetch({ videos }))
+    expect(await fetchVideos()).toEqual(videos)
+  })
+  test('throws on non-ok response', async () => {
+    vi.stubGlobal('fetch', mockFetch({}, 500))
+    await expect(fetchVideos()).rejects.toThrow('GET /videos failed: 500')
+  })
+})
+
+// ── deleteSentence ─────────────────────────────────────────────────────────
+
+describe('deleteSentence', () => {
+  test('calls DELETE /sentences/:id', async () => {
+    const stub = mockFetch({})
+    vi.stubGlobal('fetch', stub)
+    await deleteSentence(7)
+    expect((stub.mock.calls[0][0] as string)).toContain('/sentences/7')
+  })
+  test('throws on non-ok response', async () => {
+    vi.stubGlobal('fetch', mockFetch({}, 500))
+    await expect(deleteSentence(7)).rejects.toThrow('DELETE /sentences/7 failed: 500')
+  })
+})
+
+// ── removeWord ─────────────────────────────────────────────────────────────
+
+describe('removeWord', () => {
+  test('calls DELETE /words/:word lowercased', async () => {
+    const stub = mockFetch({})
+    vi.stubGlobal('fetch', stub)
+    await removeWord('HELLO')
+    expect((stub.mock.calls[0][0] as string)).toContain('/words/hello')
+  })
+  test('throws on non-ok response', async () => {
+    vi.stubGlobal('fetch', mockFetch({}, 500))
+    await expect(removeWord('hello')).rejects.toThrow('DELETE /words/hello failed: 500')
+  })
+})
+
+// ── patchWordStatus ────────────────────────────────────────────────────────
+
+describe('patchWordStatus success', () => {
+  test('resolves without throwing on success', async () => {
+    vi.stubGlobal('fetch', mockFetch({}))
+    await expect(patchWordStatus('hello', 'learned')).resolves.toBeUndefined()
+  })
+  test('throws on non-ok response', async () => {
+    vi.stubGlobal('fetch', mockFetch({}, 400))
+    await expect(patchWordStatus('hello', 'learning')).rejects.toThrow('PATCH /words/hello failed: 400')
+  })
+})
+
+// ── patchVideoTitle ────────────────────────────────────────────────────────
+
+describe('patchVideoTitle', () => {
+  test('calls PATCH /videos with url and title', async () => {
+    const stub = mockFetch({})
+    vi.stubGlobal('fetch', stub)
+    await patchVideoTitle('https://yt.com/v/1', 'New Title')
+    expect((stub.mock.calls[0][0] as string)).toContain('/videos')
+  })
+  test('throws on non-ok response', async () => {
+    vi.stubGlobal('fetch', mockFetch({ error: 'Video not found' }, 404))
+    await expect(patchVideoTitle('https://yt.com/bad', '')).rejects.toThrow('PATCH /videos failed: 404')
+  })
+})
+
+// ── fetchPracticeStats ─────────────────────────────────────────────────────
+
+describe('fetchPracticeStats', () => {
+  test('returns stats object on success', async () => {
+    const stats = { streak: 3, todayCount: 5, wordCounts: { learning: 2, learned: 1 }, last30Days: [] }
+    vi.stubGlobal('fetch', mockFetch(stats))
+    expect(await fetchPracticeStats()).toEqual(stats)
+  })
+  test('throws on non-ok response', async () => {
+    vi.stubGlobal('fetch', mockFetch({}, 500))
+    await expect(fetchPracticeStats()).rejects.toThrow('GET /practice/stats failed: 500')
+  })
+})
+
+// ── postPracticeReview ─────────────────────────────────────────────────────
+
+describe('postPracticeReview success', () => {
+  test('resolves without throwing on success', async () => {
+    vi.stubGlobal('fetch', mockFetch({}))
+    await expect(postPracticeReview('hello', 3)).resolves.toBeUndefined()
+  })
+})
+
+// ── deleteNote ─────────────────────────────────────────────────────────────
+
+describe('deleteNote', () => {
+  test('calls DELETE /sentences/:id/note', async () => {
+    const stub = mockFetch({})
+    vi.stubGlobal('fetch', stub)
+    await deleteNote(5)
+    expect((stub.mock.calls[0][0] as string)).toContain('/sentences/5/note')
+  })
+  test('throws on non-ok response', async () => {
+    vi.stubGlobal('fetch', mockFetch({ error: 'Sentence not found' }, 404))
+    await expect(deleteNote(99)).rejects.toThrow('DELETE /sentences/99/note failed: 404')
+  })
+})
+
+// ── postNoteSummarize error case ───────────────────────────────────────────
+
+describe('postNoteSummarize error', () => {
+  test('throws on non-ok response', async () => {
+    vi.stubGlobal('fetch', mockFetch({ error: 'Sentence not found' }, 404))
+    await expect(postNoteSummarize(1, [])).rejects.toThrow('POST /sentences/1/note/summarize failed: 404')
+  })
+})
+
+// ── saveNote error case ────────────────────────────────────────────────────
+
+describe('saveNote error', () => {
+  test('throws on non-ok response', async () => {
+    vi.stubGlobal('fetch', mockFetch({ error: 'note is required' }, 400))
+    await expect(saveNote(1, '')).rejects.toThrow('POST /sentences/1/note failed: 400')
+  })
+})
+
+// ── getSettings error case ─────────────────────────────────────────────────
+
+describe('getSettings error', () => {
+  test('throws on non-ok response', async () => {
+    vi.stubGlobal('fetch', mockFetch({}, 401))
+    await expect(getSettings()).rejects.toThrow('Unauthorized')
   })
 })
