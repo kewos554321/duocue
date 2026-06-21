@@ -32,6 +32,13 @@ describe('formatRelativeTime', () => {
     expect(result).not.toMatch(/前|剛才/)
     expect(result).toMatch(/\d+\/\d+/)
   })
+  test('handles SQLite datetime without Z suffix (UTC without timezone)', () => {
+    // SQLite datetime('now') returns e.g. "2026-06-22 01:02:33" — no Z
+    // Should be treated as UTC, giving the same result as with Z
+    const withZ = new Date(Date.now() - 5 * 60_000).toISOString()           // "2026-06-22T01:02:33.000Z"
+    const withoutZ = withZ.replace('T', ' ').replace(/\.\d{3}Z$/, '')       // "2026-06-22 01:02:33"
+    expect(formatRelativeTime(withoutZ)).toBe(formatRelativeTime(withZ))
+  })
 })
 
 describe('getPageNumbers', () => {

@@ -1,5 +1,7 @@
 export function formatRelativeTime(isoString: string): string {
-  const diff = Date.now() - new Date(isoString).getTime()
+  // SQLite datetime('now') returns UTC without timezone suffix; append Z if absent
+  const utc = /Z$|[+-]\d{2}:\d{2}$/.test(isoString) ? isoString : isoString + 'Z'
+  const diff = Date.now() - new Date(utc).getTime()
   const minutes = Math.floor(diff / 60_000)
   if (minutes < 1) return '剛才'
   if (minutes < 60) return `${minutes} 分鐘前`
@@ -7,5 +9,5 @@ export function formatRelativeTime(isoString: string): string {
   if (hours < 24) return `${hours} 小時前`
   const days = Math.floor(hours / 24)
   if (days < 7) return `${days} 天前`
-  return new Date(isoString).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' })
+  return new Date(utc).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' })
 }
