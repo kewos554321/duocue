@@ -99,7 +99,7 @@ function showToast(message, action) {
   toast._timer = setTimeout(() => {
     toast.classList.remove('duocue-toast-show')
     toast.classList.add('duocue-toast-hide')
-  }, action ? 6000 : 3000) // longer timeout when there's an action to click
+  }, action ? 6000 : 1500) // longer timeout when there's an action to click
 }
 ```
 
